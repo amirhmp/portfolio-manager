@@ -1,3 +1,56 @@
+# Portfolio Manager
+
+## Project Overview
+
+Next.js 16.2.10 App Router project with TypeScript, React 19, and Tailwind CSS v4. Uses **bun** as package manager.
+
+## Quick Reference
+
+```bash
+bun dev          # Start dev server (localhost:3000)
+bun run build    # Production build
+bun run lint     # ESLint
+```
+
+## Project Structure
+
+```
+src/
+├── app/           # Next.js App Router (pages, layouts)
+│   ├── layout.tsx # Root layout with Geist fonts
+│   ├── page.tsx   # Home page
+│   └── globals.css # Tailwind + CSS variables
+└── lib/           # Shared utilities
+    └── gold-accounting.ts  # Gold/investment accounting logic
+```
+
+## Key Technical Details
+
+- **Path alias**: `@/*` maps to `./src/*`
+- **Fonts**: Geist Sans + Geist Mono loaded via `next/font/google`
+- **Styling**: Tailwind CSS v4 with `@tailwindcss/postcss` plugin
+- **ESLint**: Flat config (`eslint.config.mjs`) using `eslint-config-next/core-web-vitals` + `typescript`
+- **No tests configured yet** — no test runner in dependencies
+- **No CI/CD** — no `.github/workflows` directory
+- **No environment files** — no `.env` or `.env.local`
+
+## Domain Context
+
+`src/lib/gold-accounting.ts` implements shared investment accounting:
+- Tracks users with initial capital, cash balance, and stock shares
+- Handles buy/sell transactions with commission calculation
+- Transaction count spreads equally based on participants' initial capital
+- Functions are stubs — `getRealPrice()` and `submitTransaction()` need implementation
+
+## Conventions
+
+- TypeScript strict mode enabled
+- React 19 with JSX transform (`react-jsx`)
+- Dark mode support via `prefers-color-scheme` media query
+- CSS variables for theming (`--background`, `--foreground`)
+
+---
+
 <!-- rtk-instructions v2 -->
 # RTK (Rust Token Killer) - Token-Optimized Commands
 
