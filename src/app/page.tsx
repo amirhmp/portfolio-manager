@@ -1,4 +1,18 @@
 import { prisma } from "@/lib/prisma";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default async function Dashboard() {
   const users = await prisma.user.findMany({
@@ -15,82 +29,92 @@ export default async function Dashboard() {
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="rounded-lg border bg-white p-5 dark:bg-zinc-900 dark:border-zinc-800">
-          <div className="text-sm text-zinc-500">Total Users</div>
-          <div className="text-2xl font-semibold mt-1">{users.length}</div>
-        </div>
-        <div className="rounded-lg border bg-white p-5 dark:bg-zinc-900 dark:border-zinc-800">
-          <div className="text-sm text-zinc-500">Total Initial Capital</div>
-          <div className="text-2xl font-semibold mt-1">
-            {totalCapital.toLocaleString()}
-          </div>
-        </div>
-        <div className="rounded-lg border bg-white p-5 dark:bg-zinc-900 dark:border-zinc-800">
-          <div className="text-sm text-zinc-500">Total Cash</div>
-          <div className="text-2xl font-semibold mt-1">
-            {totalCash.toLocaleString()}
-          </div>
-        </div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">
+              Total Users
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold">{users.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">
+              Total Initial Capital
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold">
+              {totalCapital.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">
+              Total Cash
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold">
+              {totalCash.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="rounded-lg border bg-white dark:bg-zinc-900 dark:border-zinc-800">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b dark:border-zinc-800">
-              <th className="text-left px-4 py-3 font-medium text-zinc-500">
-                Name
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-zinc-500">
-                Initial Capital
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-zinc-500">
-                Cash
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-zinc-500">
-                Shares
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead className="text-right">Initial Capital</TableHead>
+              <TableHead className="text-right">Cash</TableHead>
+              <TableHead className="text-right">Shares</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {users.map((user) => (
-              <tr
-                key={user.id}
-                className="border-b last:border-0 dark:border-zinc-800"
-              >
-                <td className="px-4 py-3 font-medium">
+              <TableRow key={user.id}>
+                <TableCell className="font-medium">
                   <a
                     href={`/users/${user.id}`}
-                    className="hover:underline text-blue-600 dark:text-blue-400"
+                    className="hover:underline text-primary"
                   >
                     {user.name}
                   </a>
-                </td>
-                <td className="text-right px-4 py-3">
+                </TableCell>
+                <TableCell className="text-right">
                   {user.initialCapital.toLocaleString()}
-                </td>
-                <td className="text-right px-4 py-3">
+                </TableCell>
+                <TableCell className="text-right">
                   {user.cash.toLocaleString()}
-                </td>
-                <td className="text-right px-4 py-3">
+                </TableCell>
+                <TableCell className="text-right">
                   {user.shares.length}{" "}
                   {user.shares.length === 1 ? "stock" : "stocks"}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
             {users.length === 0 && (
-              <tr>
-                <td colSpan={4} className="text-center py-8 text-zinc-400">
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   No users yet.{" "}
                   <a href="/users" className="underline">
                     Create one
                   </a>
                   .
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }

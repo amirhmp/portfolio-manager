@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Next.js 16.2.10 App Router project with TypeScript, React 19, and Tailwind CSS v4. Uses **bun** as package manager.
+Next.js 16.2.10 App Router project with TypeScript, React 19, Tailwind CSS v4, and **shadcn/ui** (base-nova style, neutral theme). Uses **bun** as package manager.
 
 ## Quick Reference
 
@@ -18,9 +18,17 @@ bun run lint     # ESLint
 src/
 ├── app/           # Next.js App Router (pages, layouts)
 │   ├── layout.tsx # Root layout with Geist fonts
-│   ├── page.tsx   # Home page
-│   └── globals.css # Tailwind + CSS variables
-└── lib/           # Shared utilities
+│   ├── page.tsx   # Dashboard
+│   ├── globals.css # Tailwind + shadcn/ui CSS variables
+│   ├── users/     # User management pages
+│   ├── stocks/    # Stock management pages
+│   └── transactions/ # Transaction pages
+├── components/
+│   ├── ui/        # shadcn/ui components (card, table, button, input, etc.)
+│   ├── Sidebar.tsx
+│   └── transaction-form.tsx  # Client component for new transaction form
+└── lib/
+    ├── utils.ts   # cn() utility for class merging
     └── gold-accounting.ts  # Gold/investment accounting logic
 ```
 
@@ -29,10 +37,10 @@ src/
 - **Path alias**: `@/*` maps to `./src/*`
 - **Fonts**: Geist Sans + Geist Mono loaded via `next/font/google`
 - **Styling**: Tailwind CSS v4 with `@tailwindcss/postcss` plugin
+- **UI Components**: shadcn/ui with 9 components installed (card, table, button, input, label, checkbox, radio-group, badge, select)
 - **ESLint**: Flat config (`eslint.config.mjs`) using `eslint-config-next/core-web-vitals` + `typescript`
 - **No tests configured yet** — no test runner in dependencies
 - **No CI/CD** — no `.github/workflows` directory
-- **No environment files** — no `.env` or `.env.local`
 
 ## Domain Context
 
@@ -46,8 +54,12 @@ src/
 
 - TypeScript strict mode enabled
 - React 19 with JSX transform (`react-jsx`)
-- Dark mode support via `prefers-color-scheme` media query
-- CSS variables for theming (`--background`, `--foreground`)
+- Dark mode support via `.dark` class on `<html>` element (shadcn/ui pattern)
+- CSS variables for shadcn/ui theming (oklch color space)
+- Use `cn()` from `@/lib/utils` for conditional class merging
+- shadcn/ui components in `@/components/ui/` — import directly, don't wrap
+- Server components by default; use `"use client"` only when needed (forms with client state)
+- Native `<select>` for server action forms (shadcn Select uses base-ui which doesn't support form submission)
 
 ---
 

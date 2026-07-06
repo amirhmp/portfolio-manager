@@ -1,5 +1,17 @@
 import { prisma } from "@/lib/prisma";
-import { createUser, updateUser, deleteUser } from "@/app/actions";
+import { createUser, deleteUser } from "@/app/actions";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default async function UsersPage() {
   const users = await prisma.user.findMany({
@@ -11,119 +23,108 @@ export default async function UsersPage() {
     <div>
       <h1 className="text-2xl font-bold mb-6">Users</h1>
 
-      {/* Create form */}
-      <form
-        action={async (formData: FormData) => {
-          "use server";
-          const name = formData.get("name") as string;
-          const capital = parseFloat(formData.get("capital") as string);
-          if (name && !isNaN(capital)) {
-            await createUser(name, capital);
-          }
-        }}
-        className="mb-6 flex gap-3 items-end rounded-lg border bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800"
-      >
-        <div className="flex-1">
-          <label className="block text-sm font-medium mb-1">Name</label>
-          <input
-            name="name"
-            required
-            className="w-full rounded-md border px-3 py-2 text-sm bg-transparent"
-            placeholder="User name"
-          />
-        </div>
-        <div className="w-40">
-          <label className="block text-sm font-medium mb-1">
-            Initial Capital
-          </label>
-          <input
-            name="capital"
-            type="number"
-            required
-            min="0"
-            step="any"
-            className="w-full rounded-md border px-3 py-2 text-sm bg-transparent"
-            placeholder="0"
-          />
-        </div>
-        <button
-          type="submit"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Add User
-        </button>
-      </form>
-
-      {/* Users table */}
-      <div className="rounded-lg border bg-white dark:bg-zinc-900 dark:border-zinc-800">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b dark:border-zinc-800">
-              <th className="text-left px-4 py-3 font-medium text-zinc-500">
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <form
+            action={async (formData: FormData) => {
+              "use server";
+              const name = formData.get("name") as string;
+              const capital = parseFloat(formData.get("capital") as string);
+              if (name && !isNaN(capital)) {
+                await createUser(name, capital);
+              }
+            }}
+            className="flex gap-3 items-end"
+          >
+            <div className="flex-1">
+              <Label htmlFor="name" className="mb-1.5">
                 Name
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-zinc-500">
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                required
+                placeholder="User name"
+              />
+            </div>
+            <div className="w-40">
+              <Label htmlFor="capital" className="mb-1.5">
                 Initial Capital
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-zinc-500">
-                Cash
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-zinc-500">
-                Shares
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-zinc-500">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+              </Label>
+              <Input
+                id="capital"
+                name="capital"
+                type="number"
+                required
+                min={0}
+                step="any"
+                placeholder="0"
+              />
+            </div>
+            <Button type="submit">Add User</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead className="text-right">Initial Capital</TableHead>
+              <TableHead className="text-right">Cash</TableHead>
+              <TableHead className="text-right">Shares</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {users.map((user) => (
-              <tr
-                key={user.id}
-                className="border-b last:border-0 dark:border-zinc-800"
-              >
-                <td className="px-4 py-3">
+              <TableRow key={user.id}>
+                <TableCell>
                   <a
                     href={`/users/${user.id}`}
-                    className="hover:underline text-blue-600 dark:text-blue-400"
+                    className="hover:underline text-primary"
                   >
                     {user.name}
                   </a>
-                </td>
-                <td className="text-right px-4 py-3">
+                </TableCell>
+                <TableCell className="text-right">
                   {user.initialCapital.toLocaleString()}
-                </td>
-                <td className="text-right px-4 py-3">
+                </TableCell>
+                <TableCell className="text-right">
                   {user.cash.toLocaleString()}
-                </td>
-                <td className="text-right px-4 py-3">
+                </TableCell>
+                <TableCell className="text-right">
                   {user.shares.length}
-                </td>
-                <td className="text-right px-4 py-3">
-                  <form action={async () => {
-                    "use server";
-                    await deleteUser(user.id);
-                  }} className="inline">
-                    <button
-                      type="submit"
-                      className="text-red-600 hover:underline text-sm"
-                    >
+                </TableCell>
+                <TableCell className="text-right">
+                  <form
+                    action={async () => {
+                      "use server";
+                      await deleteUser(user.id);
+                    }}
+                    className="inline"
+                  >
+                    <Button variant="ghost" size="sm" type="submit">
                       Delete
-                    </button>
+                    </Button>
                   </form>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
             {users.length === 0 && (
-              <tr>
-                <td colSpan={5} className="text-center py-8 text-zinc-400">
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   No users yet. Create one above.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }
