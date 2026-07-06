@@ -1,65 +1,96 @@
-import Image from "next/image";
+import { prisma } from "@/lib/prisma";
 
-export default function Home() {
+export default async function Dashboard() {
+  const users = await prisma.user.findMany({
+    include: {
+      shares: { include: { stock: true } },
+    },
+  });
+
+  const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
+  const totalCapital = users.reduce((sum, u) => sum + u.initialCapital, 0);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div>
+      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="rounded-lg border bg-white p-5 dark:bg-zinc-900 dark:border-zinc-800">
+          <div className="text-sm text-zinc-500">Total Users</div>
+          <div className="text-2xl font-semibold mt-1">{users.length}</div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="rounded-lg border bg-white p-5 dark:bg-zinc-900 dark:border-zinc-800">
+          <div className="text-sm text-zinc-500">Total Initial Capital</div>
+          <div className="text-2xl font-semibold mt-1">
+            {totalCapital.toLocaleString()}
+          </div>
         </div>
-      </main>
+        <div className="rounded-lg border bg-white p-5 dark:bg-zinc-900 dark:border-zinc-800">
+          <div className="text-sm text-zinc-500">Total Cash</div>
+          <div className="text-2xl font-semibold mt-1">
+            {totalCash.toLocaleString()}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-white dark:bg-zinc-900 dark:border-zinc-800">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b dark:border-zinc-800">
+              <th className="text-left px-4 py-3 font-medium text-zinc-500">
+                Name
+              </th>
+              <th className="text-right px-4 py-3 font-medium text-zinc-500">
+                Initial Capital
+              </th>
+              <th className="text-right px-4 py-3 font-medium text-zinc-500">
+                Cash
+              </th>
+              <th className="text-right px-4 py-3 font-medium text-zinc-500">
+                Shares
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr
+                key={user.id}
+                className="border-b last:border-0 dark:border-zinc-800"
+              >
+                <td className="px-4 py-3 font-medium">
+                  <a
+                    href={`/users/${user.id}`}
+                    className="hover:underline text-blue-600 dark:text-blue-400"
+                  >
+                    {user.name}
+                  </a>
+                </td>
+                <td className="text-right px-4 py-3">
+                  {user.initialCapital.toLocaleString()}
+                </td>
+                <td className="text-right px-4 py-3">
+                  {user.cash.toLocaleString()}
+                </td>
+                <td className="text-right px-4 py-3">
+                  {user.shares.length}{" "}
+                  {user.shares.length === 1 ? "stock" : "stocks"}
+                </td>
+              </tr>
+            ))}
+            {users.length === 0 && (
+              <tr>
+                <td colSpan={4} className="text-center py-8 text-zinc-400">
+                  No users yet.{" "}
+                  <a href="/users" className="underline">
+                    Create one
+                  </a>
+                  .
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
