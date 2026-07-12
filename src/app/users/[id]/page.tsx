@@ -1,7 +1,8 @@
 import { exitUserCash, increaseUserCapital } from "@/app/actions";
+import { PriceInput } from "@/components/price/PriceInput";
+import { PriceLabel } from "@/components/price/PriceLabel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Table,
@@ -57,7 +58,7 @@ export default async function UserDetailPage({
           </CardHeader>
           <CardContent>
             <div className="font-serif text-3xl font-medium tabular-nums text-primary">
-              {user.cash.toLocaleString()}
+              <PriceLabel value={user.cash} />
             </div>
           </CardContent>
         </Card>
@@ -100,10 +101,9 @@ export default async function UserDetailPage({
                 <Label htmlFor="increase-amount" className="mb-1.5">
                   Amount
                 </Label>
-                <Input
+                <PriceInput
                   id="increase-amount"
                   name="amount"
-                  type="number"
                   required
                   min={0}
                   step="any"
@@ -140,10 +140,9 @@ export default async function UserDetailPage({
                 <Label htmlFor="exit-amount" className="mb-1.5">
                   Amount
                 </Label>
-                <Input
+                <PriceInput
                   id="exit-amount"
                   name="amount"
-                  type="number"
                   required
                   min={0}
                   max={user.cash}

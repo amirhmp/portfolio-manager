@@ -4,30 +4,33 @@ import { createGoldTransaction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { MILLION, MITHQAL_FACTOR } from "@/constants";
 import type { User } from "@/generated/prisma/browser";
-import { normalizePrice } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { PriceInput } from "./price/PriceInput";
+import { PriceLabel } from "./price/PriceLabel";
+import { cn } from "@/lib/utils";
 
 export default function GoldTransactionForm({ users }: { users: User[] }) {
   const router = useRouter();
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [type, setType] = useState<"buy" | "sell">("buy");
-  const [purchasedAmount, setAmount] = useState<string>("");
-  const [mithqalPrice, setMithqalPrice] = useState<string>("");
+  const [purchasedAmount, setAmount] = useState<number | null>(null);
+  const [mithqalPrice, setMithqalPrice] = useState<number | null>(null);
 
   const gramPrice = useMemo(() => {
-    const p = parseFloat(mithqalPrice) * MILLION;
+    if (!mithqalPrice) return 0;
+    const p = mithqalPrice * MILLION;
     return p / MITHQAL_FACTOR;
   }, [mithqalPrice]);
 
   const purchasedWeight = useMemo(() => {
-    const a = parseFloat(purchasedAmount) * MILLION;
+    if (!purchasedAmount) return null;
+    const a = purchasedAmount * MILLION;
     if (!a || !gramPrice) return null;
     return a / gramPrice;
   }, [purchasedAmount, gramPrice]);
@@ -134,54 +137,67 @@ export default function GoldTransactionForm({ users }: { users: User[] }) {
               <Label htmlFor="amount" className="mb-1.5">
                 Purchased Amount (Million)
               </Label>
-              <Input
+              <PriceInput
                 id="amount"
                 name="amount"
-                type="number"
                 required
                 min={0}
                 step="any"
                 placeholder="e.g. 50 → 50,000,000"
                 value={purchasedAmount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={setAmount}
                 className="font-mono tabular-nums"
               />
-              <p className="mt-1 text-[0.65rem] text-muted-foreground">
-                {normalizePrice(Number(purchasedAmount) * MILLION, 0)}
-              </p>
+              {purchasedAmount && (
+                <p className="mt-1 text-[0.65rem] text-muted-foreground">
+                  <PriceLabel value={Number(purchasedAmount) * MILLION} />
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="unitPrice" className="mb-1.5">
                 Unit Price (Million/Mithqal)
               </Label>
-              <Input
+              <PriceInput
                 id="unitPrice"
                 name="unitPrice"
-                type="number"
                 required
                 min={0}
+                maxFractions={3}
                 step="any"
                 placeholder="e.g. 72.8 → 72,800,000"
                 value={mithqalPrice}
-                onChange={(e) => setMithqalPrice(e.target.value)}
+                onChange={setMithqalPrice}
                 className="font-mono tabular-nums"
               />
               <p className="mt-1 text-[0.65rem] text-muted-foreground">
-                each gram:&nbsp;<span className="text-xs font-semibold">{normalizePrice(gramPrice, 0)}</span>
+                each gram:&nbsp;
+                {gramPrice ? (
+                  <PriceLabel
+                    className="text-xs font-semibold"
+                    value={gramPrice}
+                  />
+                ) : (
+                  "-"
+                )}
               </p>
             </div>
           </div>
-          {purchasedWeight != null && (
-            <p className="text-sm text-muted-foreground">
-              ≈&nbsp;
-              <span className="font-mono tabular-nums text-foreground">
-                {purchasedWeight.toLocaleString(undefined, {
-                  maximumFractionDigits: 4,
-                })}
-              </span>
-              &nbsp;grams at this price
-            </p>
-          )}
+
+          <p
+            className={cn(
+              "text-sm text-muted-foreground",
+              !purchasedWeight && "invisible",
+            )}
+          >
+            ≈&nbsp;
+            <span className="font-mono tabular-nums text-foreground">
+              {purchasedWeight?.toLocaleString(undefined, {
+                maximumFractionDigits: 4,
+              })}
+            </span>
+            &nbsp;grams at this price
+          </p>
 
           <Button type="submit" className="w-full">
             Submit Gold Transaction

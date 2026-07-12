@@ -4,13 +4,13 @@ import { createTransaction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import type { User, Stock } from "@/generated/prisma/browser";
+import type { Stock, User } from "@/generated/prisma/browser";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PriceInput } from "./price/PriceInput";
 import {
   Select,
   SelectContent,
@@ -87,7 +87,7 @@ export default function TransactionForm({
               ))}
               {users.length === 0 && (
                 <p className="text-muted-foreground text-sm">
-                  No users.
+                  No users.&nbsp;
                   <Link
                     href="/users"
                     className="text-primary underline underline-offset-4"
@@ -157,12 +157,12 @@ export default function TransactionForm({
               <Label htmlFor="count" className="mb-1.5">
                 Total Count
               </Label>
-              <Input
+              <PriceInput
                 id="count"
                 name="count"
-                type="number"
                 required
                 min={0}
+                maxFractions={0}
                 step="any"
                 placeholder="0"
                 className="font-mono tabular-nums"
@@ -172,12 +172,12 @@ export default function TransactionForm({
               <Label htmlFor="unitPrice" className="mb-1.5">
                 Unit Price
               </Label>
-              <Input
+              <PriceInput
                 id="unitPrice"
                 name="unitPrice"
-                type="number"
                 required
                 min={0}
+                maxFractions={1}
                 step="any"
                 placeholder="0"
                 className="font-mono tabular-nums"
@@ -187,14 +187,13 @@ export default function TransactionForm({
               <Label htmlFor="commission" className="mb-1.5">
                 Commission %
               </Label>
-              <Input
+              <PriceInput
                 id="commission"
                 name="commission"
-                type="number"
+                maxFractions={3}
                 min={0}
                 step="any"
                 placeholder="0"
-                defaultValue="0"
                 className="font-mono tabular-nums"
               />
             </div>
