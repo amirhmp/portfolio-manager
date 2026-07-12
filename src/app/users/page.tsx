@@ -31,7 +31,9 @@ export default async function UsersPage() {
             action={async (formData: FormData) => {
               "use server";
               const name = formData.get("name") as string;
-              const capital = parseFloat(formData.get("capital") as string);
+              const capital = parseFloat(
+                (formData.get("capital") as string) || "0",
+              );
               if (name && !isNaN(capital)) {
                 await createUser(name, capital);
               }
@@ -52,7 +54,6 @@ export default async function UsersPage() {
                 id="capital"
                 name="capital"
                 type="number"
-                required
                 min={0}
                 step="any"
                 placeholder="0"
@@ -68,7 +69,6 @@ export default async function UsersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead className="text-right">Initial Capital</TableHead>
               <TableHead className="text-right">Cash</TableHead>
               <TableHead className="text-right">Shares</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -84,9 +84,6 @@ export default async function UsersPage() {
                   >
                     {user.name}
                   </Link>
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
-                  {user.initialCapital.toLocaleString()}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
                   {user.cash.toLocaleString()}
@@ -112,7 +109,7 @@ export default async function UsersPage() {
             {users.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={4}
                   className="text-center py-10 text-muted-foreground"
                 >
                   No users yet. Create one above.

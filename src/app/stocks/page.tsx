@@ -17,7 +17,7 @@ import { prisma } from "@/lib/prisma";
 export default async function StocksPage() {
   const stocks = await prisma.stock.findMany({
     orderBy: { createdAt: "desc" },
-    include: { _count: { select: { transactions: true, shares: true } } },
+    include: { _count: { select: { transactionGroups: true, shares: true } } },
   });
 
   return (
@@ -70,7 +70,7 @@ export default async function StocksPage() {
                   {stock._count.shares}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
-                  {stock._count.transactions}
+                  {stock._count.transactionGroups}
                 </TableCell>
                 <TableCell className="text-right">
                   <form

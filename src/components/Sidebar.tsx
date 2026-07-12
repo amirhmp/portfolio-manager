@@ -6,6 +6,7 @@ import {
   Gem,
   LayoutDashboard,
   PlusCircle,
+  Sparkles,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -28,6 +29,11 @@ const groups = [
     links: [
       { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
       { href: "/transactions/new", label: "New Transaction", icon: PlusCircle },
+      {
+        href: "/transactions/new/gold",
+        label: "New Gold Transaction",
+        icon: Sparkles,
+      },
     ],
   },
 ];

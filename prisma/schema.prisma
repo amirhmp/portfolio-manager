@@ -8,23 +8,22 @@ datasource db {
 }
 
 model User {
-  id             Int           @id @default(autoincrement())
-  name           String
-  initialCapital Float
-  cash           Float
-  shares         UserShare[]
-  transactions   Transaction[]
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id           Int           @id @default(autoincrement())
+  name         String
+  cash         Float
+  shares       UserShare[]
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Stock {
-  id             Int           @id @default(autoincrement())
-  name           String        @unique
-  shares         UserShare[]
-  transactions   Transaction[]
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                Int                @id @default(autoincrement())
+  name              String             @unique
+  shares            UserShare[]
+  transactionGroups TransactionGroup[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 model UserShare {
@@ -38,17 +37,30 @@ model UserShare {
   @@unique([userId, stockId])
 }
 
+// A TransactionGroup represents a single group buy/sell/capital event.
+// It holds all the data shared across participants (date, stock, price,
+// commission, type, total count) so it isn't duplicated per user.
+model TransactionGroup {
+  id           Int           @id @default(autoincrement())
+  stockId      Int? // null for capital-increased / cash-exited (no stock involved)
+  type         String // "buy" | "sell" | "capital-increased" | "cash-exited"
+  count        Float // total count/amount for the whole group
+  unitPrice    Float? // null for capital-increased / cash-exited
+  commission   Float? // percent, e.g. 0.25. null for capital-increased / cash-exited
+  totalCost    Float // total cost/revenue/amount for the whole group
+  createdAt    DateTime      @default(now())
+  stock        Stock?        @relation(fields: [stockId], references: [id])
+  transactions Transaction[]
+}
+
+// A Transaction is one user's portion of a TransactionGroup.
 model Transaction {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  stockId    Int
-  type       String   // "buy" | "sell"
-  count      Float    // total count for this user's portion
-  unitPrice  Float
-  commission Float    // percent, e.g. 0.25
-  realPrice  Float    // unitPrice after commission
-  totalCost  Float    // realPrice * count
-  createdAt  DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id])
-  stock      Stock    @relation(fields: [stockId], references: [id])
+  id                 Int              @id @default(autoincrement())
+  userId             Int
+  transactionGroupId Int
+  count              Float // this user's portion of the group's total count
+  totalCost          Float // this user's portion of the group's total cost
+  createdAt          DateTime         @default(now())
+  user               User             @relation(fields: [userId], references: [id])
+  transactionGroup   TransactionGroup @relation(fields: [transactionGroupId], references: [id], onDelete: Cascade)
 }

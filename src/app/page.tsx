@@ -19,7 +19,6 @@ export default async function Dashboard() {
   });
 
   const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
-  const totalCapital = users.reduce((sum, u) => sum + u.initialCapital, 0);
 
   return (
     <div>
@@ -41,12 +40,14 @@ export default async function Dashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
-              Total Initial Capital
+              Total Shares Held
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="font-serif text-3xl font-medium tabular-nums text-primary">
-              {totalCapital.toLocaleString()}
+              {users
+                .reduce((sum, u) => sum + u.shares.length, 0)
+                .toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -69,7 +70,6 @@ export default async function Dashboard() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead className="text-right">Initial Capital</TableHead>
               <TableHead className="text-right">Cash</TableHead>
               <TableHead className="text-right">Shares</TableHead>
             </TableRow>
@@ -86,9 +86,6 @@ export default async function Dashboard() {
                   </a>
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
-                  {user.initialCapital.toLocaleString()}
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
                   {user.cash.toLocaleString()}
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
@@ -100,7 +97,7 @@ export default async function Dashboard() {
             {users.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={3}
                   className="text-center py-10 text-muted-foreground"
                 >
                   No users yet.
