@@ -1,10 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import PageHeader from "@/components/page-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -13,6 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
 export default async function Dashboard() {
   const users = await prisma.user.findMany({
@@ -26,39 +23,41 @@ export default async function Dashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      <PageHeader eyebrow="Overview" title="Dashboard" />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">
+            <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
               Total Users
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold">{users.length}</div>
+            <div className="font-serif text-3xl font-medium tabular-nums text-foreground">
+              {users.length}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">
+            <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
               Total Initial Capital
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold">
+            <div className="font-serif text-3xl font-medium tabular-nums text-primary">
               {totalCapital.toLocaleString()}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">
+            <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
               Total Cash
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold">
+            <div className="font-serif text-3xl font-medium tabular-nums text-foreground">
               {totalCash.toLocaleString()}
             </div>
           </CardContent>
@@ -81,19 +80,19 @@ export default async function Dashboard() {
                 <TableCell className="font-medium">
                   <a
                     href={`/users/${user.id}`}
-                    className="hover:underline text-primary"
+                    className="text-foreground hover:text-primary transition-colors"
                   >
                     {user.name}
                   </a>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums">
                   {user.initialCapital.toLocaleString()}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums">
                   {user.cash.toLocaleString()}
                 </TableCell>
-                <TableCell className="text-right">
-                  {user.shares.length}{" "}
+                <TableCell className="text-right text-muted-foreground">
+                  {user.shares.length}
                   {user.shares.length === 1 ? "stock" : "stocks"}
                 </TableCell>
               </TableRow>
@@ -102,12 +101,15 @@ export default async function Dashboard() {
               <TableRow>
                 <TableCell
                   colSpan={4}
-                  className="text-center py-8 text-muted-foreground"
+                  className="text-center py-10 text-muted-foreground"
                 >
-                  No users yet.{" "}
-                  <a href="/users" className="underline">
+                  No users yet.
+                  <Link
+                    href="/users"
+                    className="text-primary underline underline-offset-4"
+                  >
                     Create one
-                  </a>
+                  </Link>
                   .
                 </TableCell>
               </TableRow>

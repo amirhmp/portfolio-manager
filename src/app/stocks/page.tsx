@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/prisma";
 import { createStock, deleteStock } from "@/app/actions";
+import PageHeader from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { prisma } from "@/lib/prisma";
 
 export default async function StocksPage() {
   const stocks = await prisma.stock.findMany({
@@ -21,7 +22,7 @@ export default async function StocksPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Stocks</h1>
+      <PageHeader eyebrow="Assets" title="Stocks" />
 
       <Card className="mb-6">
         <CardContent className="pt-6">
@@ -65,10 +66,10 @@ export default async function StocksPage() {
             {stocks.map((stock) => (
               <TableRow key={stock.id}>
                 <TableCell className="font-medium">{stock.name}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
                   {stock._count.shares}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
                   {stock._count.transactions}
                 </TableCell>
                 <TableCell className="text-right">
@@ -90,7 +91,7 @@ export default async function StocksPage() {
               <TableRow>
                 <TableCell
                   colSpan={4}
-                  className="text-center py-8 text-muted-foreground"
+                  className="text-center py-10 text-muted-foreground"
                 >
                   No stocks yet. Create one above.
                 </TableCell>

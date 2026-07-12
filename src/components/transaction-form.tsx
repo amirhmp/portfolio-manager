@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import Link from "next/link";
 
 interface User {
   id: number;
@@ -59,7 +60,7 @@ export default function TransactionForm({
         <form action={handleSubmit} className="space-y-5">
           <div>
             <Label className="mb-2">Participating Users</Label>
-            <div className="space-y-2 rounded-md border p-3 max-h-48 overflow-y-auto">
+            <div className="space-y-2 rounded-md border border-border bg-background/40 p-3 max-h-48 overflow-y-auto">
               {users.map((user) => (
                 <div key={user.id} className="flex items-center gap-2">
                   <Checkbox
@@ -79,17 +80,19 @@ export default function TransactionForm({
                     htmlFor={`user-${user.id}`}
                     className="text-sm font-normal cursor-pointer"
                   >
-                    {user.name} (Capital:{" "}
-                    {user.initialCapital.toLocaleString()})
+                    {user.name}
+                    <span className="font-mono tabular-nums text-muted-foreground">
+                      ({user.initialCapital.toLocaleString()})
+                    </span>
                   </Label>
                 </div>
               ))}
               {users.length === 0 && (
                 <p className="text-muted-foreground text-sm">
-                  No users.{" "}
-                  <a href="/users" className="underline">
+                  No users.
+                  <Link href="/users" className="text-primary underline underline-offset-4">
                     Create one first
-                  </a>
+                  </Link>
                   .
                 </p>
               )}
@@ -104,7 +107,7 @@ export default function TransactionForm({
               id="stock"
               name="stock"
               required
-              className="flex h-8 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm shadow-xs transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <option value="">Select a stock</option>
               {stocks.map((stock) => (
@@ -126,7 +129,7 @@ export default function TransactionForm({
                 <RadioGroupItem value="buy" id="type-buy" />
                 <Label
                   htmlFor="type-buy"
-                  className="text-green-700 dark:text-green-400 font-medium cursor-pointer"
+                  className="text-primary font-medium cursor-pointer"
                 >
                   Buy
                 </Label>
@@ -135,7 +138,7 @@ export default function TransactionForm({
                 <RadioGroupItem value="sell" id="type-sell" />
                 <Label
                   htmlFor="type-sell"
-                  className="text-red-700 dark:text-red-400 font-medium cursor-pointer"
+                  className="text-destructive font-medium cursor-pointer"
                 >
                   Sell
                 </Label>
@@ -156,6 +159,7 @@ export default function TransactionForm({
                 min={0}
                 step="any"
                 placeholder="0"
+                className="font-mono tabular-nums"
               />
             </div>
             <div>
@@ -170,6 +174,7 @@ export default function TransactionForm({
                 min={0}
                 step="any"
                 placeholder="0"
+                className="font-mono tabular-nums"
               />
             </div>
             <div>
@@ -184,6 +189,7 @@ export default function TransactionForm({
                 step="any"
                 placeholder="0"
                 defaultValue="0"
+                className="font-mono tabular-nums"
               />
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -9,6 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
 export default async function TransactionsPage() {
   const transactions = await prisma.transaction.findMany({
@@ -18,7 +20,7 @@ export default async function TransactionsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Transaction History</h1>
+      <PageHeader eyebrow="Ledger" title="Transaction History" />
 
       <Card>
         <Table>
@@ -38,34 +40,38 @@ export default async function TransactionsPage() {
           <TableBody>
             {transactions.map((tx) => (
               <TableRow key={tx.id}>
-                <TableCell>
+                <TableCell className="text-muted-foreground">
                   {new Date(tx.createdAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
                   <a
                     href={`/users/${tx.userId}`}
-                    className="hover:underline text-primary"
+                    className="font-medium text-foreground hover:text-primary transition-colors"
                   >
                     {tx.user.name}
                   </a>
                 </TableCell>
                 <TableCell>{tx.stock.name}</TableCell>
                 <TableCell>
-                  <Badge variant={tx.type === "buy" ? "default" : "destructive"}>
+                  <Badge
+                    variant={tx.type === "buy" ? "default" : "destructive"}
+                  >
                     {tx.type.toUpperCase()}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums">
                   {tx.count.toLocaleString()}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums">
                   {tx.unitPrice.toLocaleString()}
                 </TableCell>
-                <TableCell className="text-right">{tx.commission}%</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                  {tx.commission}%
+                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
                   {tx.realPrice.toLocaleString()}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums font-medium">
                   {tx.totalCost.toLocaleString()}
                 </TableCell>
               </TableRow>
@@ -74,12 +80,15 @@ export default async function TransactionsPage() {
               <TableRow>
                 <TableCell
                   colSpan={9}
-                  className="text-center py-8 text-muted-foreground"
+                  className="text-center py-10 text-muted-foreground"
                 >
-                  No transactions yet.{" "}
-                  <a href="/transactions/new" className="underline">
+                  No transactions yet.
+                  <Link
+                    href="/transactions/new"
+                    className="text-primary underline underline-offset-4"
+                  >
                     Create one
-                  </a>
+                  </Link>
                   .
                 </TableCell>
               </TableRow>

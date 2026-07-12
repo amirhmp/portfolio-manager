@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,13 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -27,13 +34,20 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn(geistSans.variable, geistMono.variable, "h-full antialiased")}
+      className={cn(
+        geistSans.variable,
+        geistMono.variable,
+        fraunces.variable,
+        "dark h-full antialiased",
+      )}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex">
+      <body className="min-h-full flex bg-background">
         <Sidebar />
-        <main className="flex-1 overflow-auto bg-background">
-          <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
+        <main className="flex-1 overflow-auto">
+          <div className="mx-auto max-w-6xl px-6 py-10 sm:px-10">
+            {children}
+          </div>
         </main>
       </body>
     </html>

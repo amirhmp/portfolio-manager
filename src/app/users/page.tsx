@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/prisma";
 import { createUser, deleteUser } from "@/app/actions";
+import PageHeader from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,6 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
 export default async function UsersPage() {
   const users = await prisma.user.findMany({
@@ -21,7 +23,7 @@ export default async function UsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Users</h1>
+      <PageHeader eyebrow="Participants" title="Users" />
 
       <Card className="mb-6">
         <CardContent className="pt-6">
@@ -40,12 +42,7 @@ export default async function UsersPage() {
               <Label htmlFor="name" className="mb-1.5">
                 Name
               </Label>
-              <Input
-                id="name"
-                name="name"
-                required
-                placeholder="User name"
-              />
+              <Input id="name" name="name" required placeholder="User name" />
             </div>
             <div className="w-40">
               <Label htmlFor="capital" className="mb-1.5">
@@ -81,20 +78,20 @@ export default async function UsersPage() {
             {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
-                  <a
+                  <Link
                     href={`/users/${user.id}`}
-                    className="hover:underline text-primary"
+                    className="font-medium text-foreground hover:text-primary transition-colors"
                   >
                     {user.name}
-                  </a>
+                  </Link>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums">
                   {user.initialCapital.toLocaleString()}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums">
                   {user.cash.toLocaleString()}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right text-muted-foreground">
                   {user.shares.length}
                 </TableCell>
                 <TableCell className="text-right">
@@ -116,7 +113,7 @@ export default async function UsersPage() {
               <TableRow>
                 <TableCell
                   colSpan={5}
-                  className="text-center py-8 text-muted-foreground"
+                  className="text-center py-10 text-muted-foreground"
                 >
                   No users yet. Create one above.
                 </TableCell>

@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/prisma";
+import PageHeader from "@/components/page-header";
 import TransactionForm from "@/components/transaction-form";
+import { prisma } from "@/lib/prisma";
 
 export default async function NewTransactionPage() {
   const users = await prisma.user.findMany({ orderBy: { name: "asc" } });
@@ -7,7 +8,7 @@ export default async function NewTransactionPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">New Transaction</h1>
+      <PageHeader eyebrow="Record entry" title="New Transaction" />
       <TransactionForm users={users} stocks={stocks} />
     </div>
   );

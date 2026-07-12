@@ -39,49 +39,61 @@ export default async function UserDetailPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">{user.name}</h1>
+      <div className="mb-8">
+        <p className="mb-1.5 font-mono text-[0.7rem] font-medium uppercase tracking-[0.16em] text-primary/80">
+          Participant
+        </p>
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-foreground">
+          {user.name}
+        </h1>
+        <div className="mt-3 ledger-rule" />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">
+            <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
               Initial Capital
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold">
+            <div className="font-serif text-3xl font-medium tabular-nums text-foreground">
               {user.initialCapital.toLocaleString()}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">
+            <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
               Cash
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold">
+            <div className="font-serif text-3xl font-medium tabular-nums text-primary">
               {user.cash.toLocaleString()}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">
+            <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
               Shares
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold">
+            <div className="font-serif text-3xl font-medium tabular-nums text-foreground">
               {user.shares.length}{" "}
-              {user.shares.length === 1 ? "stock" : "stocks"}
+              <span className="text-lg text-muted-foreground">
+                {user.shares.length === 1 ? "stock" : "stocks"}
+              </span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <h2 className="text-lg font-semibold mb-3">Portfolio</h2>
+      <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
+        Portfolio
+      </h2>
       <Card className="mb-8">
         <Table>
           <TableHeader>
@@ -98,7 +110,7 @@ export default async function UserDetailPage({
                   <TableCell className="font-medium">
                     {share.stock.name}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right font-mono tabular-nums">
                     {share.count.toLocaleString()}
                   </TableCell>
                 </TableRow>
@@ -107,7 +119,7 @@ export default async function UserDetailPage({
               <TableRow>
                 <TableCell
                   colSpan={2}
-                  className="text-center py-6 text-muted-foreground"
+                  className="text-center py-8 text-muted-foreground"
                 >
                   No shares held.
                 </TableCell>
@@ -117,7 +129,9 @@ export default async function UserDetailPage({
         </Table>
       </Card>
 
-      <h2 className="text-lg font-semibold mb-3">Transaction History</h2>
+      <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
+        Transaction History
+      </h2>
       <Card>
         <Table>
           <TableHeader>
@@ -134,25 +148,25 @@ export default async function UserDetailPage({
           <TableBody>
             {user.transactions.map((tx) => (
               <TableRow key={tx.id}>
-                <TableCell>
+                <TableCell className="text-muted-foreground">
                   {new Date(tx.createdAt).toLocaleDateString()}
                 </TableCell>
-                <TableCell>{tx.stock.name}</TableCell>
+                <TableCell className="font-medium">{tx.stock.name}</TableCell>
                 <TableCell>
                   <Badge variant={tx.type === "buy" ? "default" : "destructive"}>
                     {tx.type.toUpperCase()}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums">
                   {tx.count.toLocaleString()}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums">
                   {tx.unitPrice.toLocaleString()}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums">
                   {tx.realPrice.toLocaleString()}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-mono tabular-nums font-medium">
                   {tx.totalCost.toLocaleString()}
                 </TableCell>
               </TableRow>
@@ -161,7 +175,7 @@ export default async function UserDetailPage({
               <TableRow>
                 <TableCell
                   colSpan={7}
-                  className="text-center py-6 text-muted-foreground"
+                  className="text-center py-8 text-muted-foreground"
                 >
                   No transactions yet.
                 </TableCell>
