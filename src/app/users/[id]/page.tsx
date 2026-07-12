@@ -1,9 +1,5 @@
-import { exitUserCash, increaseUserCapital } from "@/app/actions";
-import { PriceInput } from "@/components/price/PriceInput";
 import { PriceLabel } from "@/components/price/PriceLabel";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -15,6 +11,8 @@ import {
 import UserTransactionsTable from "@/components/user-transactions-table";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import ExitUserCashForm from "./exit-user-cash-form";
+import IncreaseCapitalForm from "./increase-capital-form";
 
 export default async function UserDetailPage({
   params,
@@ -87,32 +85,7 @@ export default async function UserDetailPage({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form
-              action={async (formData: FormData) => {
-                "use server";
-                const amount = parseFloat(formData.get("amount") as string);
-                if (amount > 0) {
-                  await increaseUserCapital(userId, amount);
-                }
-              }}
-              className="flex gap-3 items-end"
-            >
-              <div className="flex-1">
-                <Label htmlFor="increase-amount" className="mb-1.5">
-                  Amount
-                </Label>
-                <PriceInput
-                  id="increase-amount"
-                  name="amount"
-                  required
-                  min={0}
-                  step="any"
-                  placeholder="0"
-                  className="font-mono tabular-nums"
-                />
-              </div>
-              <Button type="submit">Add to Cash</Button>
-            </form>
+            <IncreaseCapitalForm userId={user.id} />
             <p className="mt-2 text-[0.65rem] text-muted-foreground">
               Logged as a capital-increased transaction.
             </p>
@@ -126,35 +99,7 @@ export default async function UserDetailPage({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form
-              action={async (formData: FormData) => {
-                "use server";
-                const amount = parseFloat(formData.get("amount") as string);
-                if (amount > 0) {
-                  await exitUserCash(userId, amount);
-                }
-              }}
-              className="flex gap-3 items-end"
-            >
-              <div className="flex-1">
-                <Label htmlFor="exit-amount" className="mb-1.5">
-                  Amount
-                </Label>
-                <PriceInput
-                  id="exit-amount"
-                  name="amount"
-                  required
-                  min={0}
-                  max={user.cash}
-                  step="any"
-                  placeholder="0"
-                  className="font-mono tabular-nums"
-                />
-              </div>
-              <Button type="submit" variant="destructive">
-                Exit Cash
-              </Button>
-            </form>
+            <ExitUserCashForm userId={user.id} maxAmount={user.cash} />
             <p className="mt-2 text-[0.65rem] text-muted-foreground">
               Logged as a cash-exited transaction. Decreases cash on hand.
             </p>

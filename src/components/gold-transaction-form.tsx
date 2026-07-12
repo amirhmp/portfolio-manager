@@ -1,6 +1,6 @@
 "use client";
 
-import { createGoldTransaction } from "@/app/actions";
+import { createGoldTransaction as createGoldTransactionAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,12 +8,13 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { MILLION, MITHQAL_FACTOR } from "@/constants";
 import type { User } from "@/generated/prisma/browser";
+import useSubmitForm from "@/hooks/useSubmitForm";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { PriceInput } from "./price/PriceInput";
 import { PriceLabel } from "./price/PriceLabel";
-import { cn } from "@/lib/utils";
 
 export default function GoldTransactionForm({ users }: { users: User[] }) {
   const router = useRouter();
@@ -21,6 +22,9 @@ export default function GoldTransactionForm({ users }: { users: User[] }) {
   const [type, setType] = useState<"buy" | "sell">("buy");
   const [purchasedAmount, setAmount] = useState<number | null>(null);
   const [mithqalPrice, setMithqalPrice] = useState<number | null>(null);
+  const { isPending, request: createGoldTransaction } = useSubmitForm(
+    createGoldTransactionAction,
+  );
 
   const gramPrice = useMemo(() => {
     if (!mithqalPrice) return 0;
@@ -199,7 +203,7 @@ export default function GoldTransactionForm({ users }: { users: User[] }) {
             &nbsp;grams at this price
           </p>
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full" loading={isPending}>
             Submit Gold Transaction
           </Button>
         </form>

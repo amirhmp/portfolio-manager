@@ -1,16 +1,16 @@
 "use client";
 
-import { createTransaction } from "@/app/actions";
+import { createTransaction as createTransactionAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Stock, User } from "@/generated/prisma/browser";
+import useSubmitForm from "@/hooks/useSubmitForm";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { PriceInput } from "./price/PriceInput";
 import {
   Select,
@@ -31,7 +31,9 @@ export default function TransactionForm({
   const router = useRouter();
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [type, setType] = useState<"buy" | "sell">("buy");
-  const [isPending, startTransition] = useTransition();
+  const { isPending, request: createTransaction } = useSubmitForm(
+    createTransactionAction,
+  );
 
   async function handleSubmit(formData: FormData) {
     const stockId = parseInt(formData.get("stock") as string);
@@ -42,21 +44,15 @@ export default function TransactionForm({
     );
 
     if (selectedUsers.length > 0 && stockId && count > 0 && unitPrice > 0) {
-      startTransition(async () => {
-        const result = await createTransaction(
-          selectedUsers,
-          stockId,
-          count,
-          type,
-          unitPrice,
-          commission,
-        );
-        if (!result.success) {
-          toast.error(result.message);
-          return;
-        }
-        router.push("/transactions");
-      });
+      const result = await createTransaction(
+        selectedUsers,
+        stockId,
+        count,
+        type,
+        unitPrice,
+        commission,
+      );
+      if (result.success) router.push("/transactions");
     }
   }
 

@@ -13,48 +13,52 @@ import { revalidatePath } from "next/cache";
 
 // ─── Users ────────────────────────────────────────────
 
-export async function createUser(name: string, initialCapital: number) {
-  const user = await prisma.user.create({
-    data: { name, cash: 0 },
-  });
+export const createUser = withErrorHandling(
+  async (name: string, initialCapital: number) => {
+    const user = await prisma.user.create({
+      data: { name, cash: 0 },
+    });
 
-  // The "initial capital" entered on creation is just the user's first
-  // capital-increased transaction, not a separate stored field.
-  if (initialCapital > 0) {
-    await submitCapitalIncrease(user.id, initialCapital);
-  }
+    // The "initial capital" entered on creation is just the user's first
+    // capital-increased transaction, not a separate stored field.
+    if (initialCapital > 0) {
+      await submitCapitalIncrease(user.id, initialCapital);
+    }
 
-  revalidatePath("/users");
-  revalidatePath("/");
-}
+    revalidatePath("/users");
+    revalidatePath("/");
+  },
+);
 
-export async function updateUser(id: number, name: string) {
-  await prisma.user.update({
-    where: { id },
-    data: { name },
-  });
-  revalidatePath("/users");
-  revalidatePath("/");
-}
+export const updateUser = withErrorHandling(
+  async (id: number, name: string) => {
+    await prisma.user.update({
+      where: { id },
+      data: { name },
+    });
+    revalidatePath("/users");
+    revalidatePath("/");
+  },
+);
 
-export async function deleteUser(id: number) {
+export const deleteUser = withErrorHandling(async (id: number) => {
   await prisma.user.delete({ where: { id } });
   revalidatePath("/users");
   revalidatePath("/");
-}
+});
 
 // ─── Stocks ───────────────────────────────────────────
 
-export async function createStock(name: string) {
+export const createStock = withErrorHandling(async (name: string) => {
   await prisma.stock.create({ data: { name } });
   revalidatePath("/stocks");
-}
+});
 
-export async function deleteStock(id: number) {
+export const deleteStock = withErrorHandling(async (id: number) => {
   if (id === GOLD_STOCK_ID) return;
   await prisma.stock.delete({ where: { id } });
   revalidatePath("/stocks");
-}
+});
 
 // ─── Transactions ─────────────────────────────────────
 
@@ -88,31 +92,37 @@ export const createTransaction = withErrorHandling(
  * Gold trades carry no commission.
  */
 
-export async function createGoldTransaction(
-  userIds: number[],
-  purchasedAmountInMillions: number,
-  type: TradeType,
-  mithqalPriceInMillions: number,
-) {
-  const grams =
-    (MITHQAL_FACTOR * purchasedAmountInMillions) / mithqalPriceInMillions;
-  const gramPrice = (mithqalPriceInMillions * MILLION) / MITHQAL_FACTOR;
-  await submitTransaction(userIds, GOLD_STOCK_ID, grams, type, gramPrice, 0);
-  revalidatePath("/transactions");
-  revalidatePath("/users");
-  revalidatePath("/");
-}
+export const createGoldTransaction = withErrorHandling(
+  async (
+    userIds: number[],
+    purchasedAmountInMillions: number,
+    type: TradeType,
+    mithqalPriceInMillions: number,
+  ) => {
+    const grams =
+      (MITHQAL_FACTOR * purchasedAmountInMillions) / mithqalPriceInMillions;
+    const gramPrice = (mithqalPriceInMillions * MILLION) / MITHQAL_FACTOR;
+    await submitTransaction(userIds, GOLD_STOCK_ID, grams, type, gramPrice, 0);
+    revalidatePath("/transactions");
+    revalidatePath("/users");
+    revalidatePath("/");
+  },
+);
 
-export async function increaseUserCapital(userId: number, amount: number) {
-  await submitCapitalIncrease(userId, amount);
-  revalidatePath(`/users/${userId}`);
-  revalidatePath("/users");
-  revalidatePath("/");
-}
+export const increaseUserCapital = withErrorHandling(
+  async (userId: number, amount: number) => {
+    await submitCapitalIncrease(userId, amount);
+    revalidatePath(`/users/${userId}`);
+    revalidatePath("/users");
+    revalidatePath("/");
+  },
+);
 
-export async function exitUserCash(userId: number, amount: number) {
-  await submitCashExit(userId, amount);
-  revalidatePath(`/users/${userId}`);
-  revalidatePath("/users");
-  revalidatePath("/");
-}
+export const exitUserCash = withErrorHandling(
+  async (userId: number, amount: number) => {
+    await submitCashExit(userId, amount);
+    revalidatePath(`/users/${userId}`);
+    revalidatePath("/users");
+    revalidatePath("/");
+  },
+);

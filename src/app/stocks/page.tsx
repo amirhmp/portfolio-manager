@@ -1,9 +1,5 @@
-import { createStock, deleteStock } from "@/app/actions";
 import PageHeader from "@/components/page-header";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -13,6 +9,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
+import CreateStockForm from "./_components/create-stock-form";
+import DeleteStockButton from "./_components/delete-stock-btn";
 
 export default async function StocksPage() {
   const stocks = await prisma.stock.findMany({
@@ -26,29 +24,7 @@ export default async function StocksPage() {
 
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <form
-            action={async (formData: FormData) => {
-              "use server";
-              const name = formData.get("name") as string;
-              if (name) {
-                await createStock(name);
-              }
-            }}
-            className="flex gap-3 items-end"
-          >
-            <div className="flex-1">
-              <Label htmlFor="name" className="mb-1.5">
-                Stock Name / Symbol
-              </Label>
-              <Input
-                id="name"
-                name="name"
-                required
-                placeholder="e.g. AAPL, Gold, BTC"
-              />
-            </div>
-            <Button type="submit">Add Stock</Button>
-          </form>
+          <CreateStockForm />
         </CardContent>
       </Card>
 
@@ -73,17 +49,7 @@ export default async function StocksPage() {
                   {stock._count.transactionGroups}
                 </TableCell>
                 <TableCell className="text-right">
-                  <form
-                    action={async () => {
-                      "use server";
-                      await deleteStock(stock.id);
-                    }}
-                    className="inline"
-                  >
-                    <Button variant="ghost" size="sm" type="submit">
-                      Delete
-                    </Button>
-                  </form>
+                  <DeleteStockButton stockId={stock.id} />
                 </TableCell>
               </TableRow>
             ))}
