@@ -1,7 +1,7 @@
 import { AppError } from "./errors";
 import { getExceptionMessage } from "./utils";
 
-type ActionResult<T> =
+export type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; message: string; fieldErrors?: Record<string, string[]> };
 
