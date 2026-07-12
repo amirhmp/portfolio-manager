@@ -1,26 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createTransaction } from "@/app/actions";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import type { User, Stock } from "@/generated/prisma/browser";
 import Link from "next/link";
-
-interface User {
-  id: number;
-  name: string;
-  initialCapital: number;
-}
-
-interface Stock {
-  id: number;
-  name: string;
-}
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export default function TransactionForm({
   users,
@@ -82,7 +80,7 @@ export default function TransactionForm({
                   >
                     {user.name}
                     <span className="font-mono tabular-nums text-muted-foreground">
-                      ({user.initialCapital.toLocaleString()})
+                      ({user.cash.toLocaleString()})
                     </span>
                   </Label>
                 </div>
@@ -90,7 +88,10 @@ export default function TransactionForm({
               {users.length === 0 && (
                 <p className="text-muted-foreground text-sm">
                   No users.
-                  <Link href="/users" className="text-primary underline underline-offset-4">
+                  <Link
+                    href="/users"
+                    className="text-primary underline underline-offset-4"
+                  >
                     Create one first
                   </Link>
                   .
@@ -103,19 +104,24 @@ export default function TransactionForm({
             <Label htmlFor="stock" className="mb-1.5">
               Stock
             </Label>
-            <select
-              id="stock"
-              name="stock"
-              required
-              className="flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm shadow-xs transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <option value="">Select a stock</option>
-              {stocks.map((stock) => (
-                <option key={stock.id} value={stock.id}>
-                  {stock.name}
-                </option>
-              ))}
-            </select>
+            <Select id="stock" name="stock" required>
+              <SelectTrigger className="w-45">
+                <SelectValue>
+                  {(value: number) =>
+                    stocks.find((s) => s.id === value)?.name ?? "Select a stock"
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {stocks.map((stock) => (
+                    <SelectItem key={stock.id} value={stock.id}>
+                      {stock.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
