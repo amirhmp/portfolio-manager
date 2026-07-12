@@ -9,7 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Stock, User } from "@/generated/prisma/browser";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { PriceInput } from "./price/PriceInput";
 import {
   Select,
@@ -30,6 +31,7 @@ export default function TransactionForm({
   const router = useRouter();
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [type, setType] = useState<"buy" | "sell">("buy");
+  const [isPending, startTransition] = useTransition();
 
   async function handleSubmit(formData: FormData) {
     const stockId = parseInt(formData.get("stock") as string);
@@ -40,15 +42,21 @@ export default function TransactionForm({
     );
 
     if (selectedUsers.length > 0 && stockId && count > 0 && unitPrice > 0) {
-      await createTransaction(
-        selectedUsers,
-        stockId,
-        count,
-        type,
-        unitPrice,
-        commission,
-      );
-      router.push("/transactions");
+      startTransition(async () => {
+        const result = await createTransaction(
+          selectedUsers,
+          stockId,
+          count,
+          type,
+          unitPrice,
+          commission,
+        );
+        if (!result.success) {
+          toast.error(result.message);
+          return;
+        }
+        router.push("/transactions");
+      });
     }
   }
 
@@ -199,7 +207,7 @@ export default function TransactionForm({
             </div>
           </div>
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" loading={isPending} className="w-full">
             Submit Transaction
           </Button>
         </form>

@@ -8,6 +8,7 @@ import {
   type TradeType,
 } from "@/lib/gold-accounting";
 import { prisma } from "@/lib/prisma";
+import { withErrorHandling } from "@/lib/with-action-error-handling";
 import { revalidatePath } from "next/cache";
 
 // ─── Users ────────────────────────────────────────────
@@ -57,19 +58,28 @@ export async function deleteStock(id: number) {
 
 // ─── Transactions ─────────────────────────────────────
 
-export async function createTransaction(
-  userIds: number[],
-  stockId: number,
-  count: number,
-  type: TradeType,
-  unitPrice: number,
-  commission: number = 0,
-) {
-  await submitTransaction(userIds, stockId, count, type, unitPrice, commission);
-  revalidatePath("/transactions");
-  revalidatePath("/users");
-  revalidatePath("/");
-}
+export const createTransaction = withErrorHandling(
+  async (
+    userIds: number[],
+    stockId: number,
+    count: number,
+    type: TradeType,
+    unitPrice: number,
+    commission: number = 0,
+  ) => {
+    await submitTransaction(
+      userIds,
+      stockId,
+      count,
+      type,
+      unitPrice,
+      commission,
+    );
+    revalidatePath("/transactions");
+    revalidatePath("/users");
+    revalidatePath("/");
+  },
+);
 
 /**
  * Gold-specific transaction. The form collects a purchased AMOUNT (money, in
