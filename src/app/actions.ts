@@ -87,7 +87,6 @@ export async function createGoldTransaction(
   const grams =
     (MITHQAL_FACTOR * purchasedAmountInMillions) / mithqalPriceInMillions;
   const gramPrice = (mithqalPriceInMillions * MILLION) / MITHQAL_FACTOR;
-  return console.log("debug", { grams, gramPrice });
   await submitTransaction(userIds, GOLD_STOCK_ID, grams, type, gramPrice, 0);
   revalidatePath("/transactions");
   revalidatePath("/users");

@@ -23,7 +23,6 @@ export default async function Dashboard() {
   return (
     <div>
       <PageHeader eyebrow="Overview" title="Dashboard" />
-
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <Card>
           <CardHeader className="pb-2">
@@ -100,7 +99,7 @@ export default async function Dashboard() {
                   colSpan={3}
                   className="text-center py-10 text-muted-foreground"
                 >
-                  No users yet.
+                  No users yet.&nbsp;
                   <Link
                     href="/users"
                     className="text-primary underline underline-offset-4"

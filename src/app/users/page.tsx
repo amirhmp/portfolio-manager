@@ -1,5 +1,6 @@
 import { createUser, deleteUser } from "@/app/actions";
 import PageHeader from "@/components/page-header";
+import { PriceInput } from "@/components/price/PriceInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,6 @@ export default async function UsersPage() {
   return (
     <div>
       <PageHeader eyebrow="Participants" title="Users" />
-
       <Card className="mb-6">
         <CardContent className="pt-6">
           <form
@@ -50,10 +50,9 @@ export default async function UsersPage() {
               <Label htmlFor="capital" className="mb-1.5">
                 Initial Capital
               </Label>
-              <Input
+              <PriceInput
                 id="capital"
                 name="capital"
-                type="number"
                 min={0}
                 step="any"
                 placeholder="0"

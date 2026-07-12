@@ -111,7 +111,7 @@ export default async function TransactionsPage() {
                   colSpan={9}
                   className="text-center py-10 text-muted-foreground"
                 >
-                  No transactions yet.
+                  No transactions yet.&nbsp;
                   <Link
                     href="/transactions/new"
                     className="text-primary underline underline-offset-4"
