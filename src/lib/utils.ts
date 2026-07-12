@@ -71,3 +71,19 @@ export function normalizePrice(
     maximumFractionDigits: fractions,
   });
 }
+
+export function getExceptionMessage(error: unknown): string {
+  if (error instanceof AggregateError) {
+    return error.errors.map(err => (err instanceof Error ? err.message : String(err))).join(", ");
+  } else if (error instanceof Error) {
+    return error.message;
+  } else if (typeof error === "string") {
+    return error;
+  } else if (typeof error === "object" && error !== null) {
+    return JSON.stringify(error);
+  } else if (typeof error === "number") {
+    return error.toString();
+  } else {
+    return "An unknown error occurred.";
+  }
+}

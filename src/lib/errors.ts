@@ -1,0 +1,9 @@
+export class AppError extends Error {
+  constructor(
+    message: string,
+    public code = "INTERNAL_ERROR",
+  ) {
+    super(message);
+    this.name = "AppError";
+  }
+}

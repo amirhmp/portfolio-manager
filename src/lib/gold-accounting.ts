@@ -1,3 +1,4 @@
+import { AppError } from "./errors";
 import { getRealPrice, type TradeType } from "./pricing";
 import { prisma } from "./prisma";
 
@@ -55,7 +56,7 @@ export async function submitTransaction(
 
   return prisma.$transaction(async (tx) => {
     const users = await tx.user.findMany({ where: { id: { in: userIds } } });
-    if (users.length === 0) throw new Error("No users found");
+    if (users.length === 0) throw new AppError("No users found");
 
     const group = await tx.transactionGroup.create({
       data: {
@@ -72,7 +73,7 @@ export async function submitTransaction(
       // Split by each participant's cash balance -- buying power comes from cash on hand.
       const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
       if (totalCash <= 0) {
-        throw new Error("Selected users have no cash available to buy with");
+        throw new AppError("Selected users have no cash available to buy with");
       }
 
       const splitCounts = splitByWeight(
@@ -119,7 +120,7 @@ export async function submitTransaction(
 
       const totalShares = shares.reduce((sum, s) => sum + s.count, 0);
       if (totalShares <= 0) {
-        throw new Error("Selected users have no shares to sell");
+        throw new AppError("Selected users have no shares to sell");
       }
 
       const splitCounts = splitByWeight(
@@ -169,11 +170,11 @@ export async function submitTransaction(
  * single-participant TransactionGroup for a consistent data model).
  */
 export async function submitCapitalIncrease(userId: number, amount: number) {
-  if (amount <= 0) throw new Error("Amount must be greater than 0");
+  if (amount <= 0) throw new AppError("Amount must be greater than 0");
 
   return prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: userId } });
-    if (!user) throw new Error("User not found");
+    if (!user) throw new AppError("User not found");
 
     const group = await tx.transactionGroup.create({
       data: {
@@ -206,12 +207,12 @@ export async function submitCapitalIncrease(userId: number, amount: number) {
  * logged as a "cash-exited" transaction.
  */
 export async function submitCashExit(userId: number, amount: number) {
-  if (amount <= 0) throw new Error("Amount must be greater than 0");
+  if (amount <= 0) throw new AppError("Amount must be greater than 0");
 
   return prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: userId } });
-    if (!user) throw new Error("User not found");
-    if (user.cash < amount) throw new Error("Insufficient cash to exit");
+    if (!user) throw new AppError("User not found");
+    if (user.cash < amount) throw new AppError("Insufficient cash to exit");
 
     const group = await tx.transactionGroup.create({
       data: {
