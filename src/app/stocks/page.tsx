@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { GOLD_STOCK_ID } from "@/constants";
 import { prisma } from "@/lib/prisma";
 import CreateStockForm from "./_components/create-stock-form";
 import DeleteStockButton from "./_components/delete-stock-btn";
@@ -49,7 +50,9 @@ export default async function StocksPage() {
                   {stock._count.transactionGroups}
                 </TableCell>
                 <TableCell className="text-right">
-                  <DeleteStockButton stockId={stock.id} />
+                  {stock.id !== GOLD_STOCK_ID && (
+                    <DeleteStockButton stockId={stock.id} />
+                  )}
                 </TableCell>
               </TableRow>
             ))}

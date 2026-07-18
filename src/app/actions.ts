@@ -1,6 +1,7 @@
 "use server";
 
 import { GOLD_STOCK_ID, MILLION, MITHQAL_FACTOR } from "@/constants";
+import { AppError } from "@/lib/errors";
 import {
   submitCapitalIncrease,
   submitCashExit,
@@ -55,7 +56,7 @@ export const createStock = withErrorHandling(async (name: string) => {
 });
 
 export const deleteStock = withErrorHandling(async (id: number) => {
-  if (id === GOLD_STOCK_ID) return;
+  if (id === GOLD_STOCK_ID) throw new AppError("Can not delete 'Gold'");
   await prisma.stock.delete({ where: { id } });
   revalidatePath("/stocks");
 });
