@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { PriceInput } from "./price/PriceInput";
 import { PriceLabel } from "./price/PriceLabel";
 
@@ -45,25 +46,26 @@ export default function GoldTransactionForm({ users }: { users: User[] }) {
       formData.get("unitPrice") as string,
     );
 
-    if (
-      selectedUsers.length > 0 &&
-      amountInMillions > 0 &&
-      mithqalPriceInMillions > 0
-    ) {
-      await createGoldTransaction(
+    if (selectedUsers.length === 0) {
+      toast.error("At least select one user");
+      return;
+    }
+
+    if (amountInMillions > 0 && mithqalPriceInMillions > 0) {
+      const result = await createGoldTransaction(
         selectedUsers,
         amountInMillions,
         type,
         mithqalPriceInMillions,
       );
-      router.push("/transactions");
+      if (result.success) router.push("/transactions");
     }
   }
 
   return (
     <Card className="max-w-xl">
       <CardContent className="pt-6">
-        <form action={handleSubmit} className="space-y-5">
+        <form action={handleSubmit} className="space-y-5" autoComplete="off">
           <div>
             <Label className="mb-2">Participating Users</Label>
             <div className="space-y-2 rounded-md border border-border bg-background/40 p-3 max-h-48 overflow-y-auto">
