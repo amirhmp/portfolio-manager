@@ -1,6 +1,7 @@
 import { AppError } from "./errors";
 import { getRealPrice, type TradeType } from "./pricing";
 import { prisma } from "./prisma";
+import { normalizePrice } from "./utils";
 
 export type { TradeType } from "./pricing";
 export { getRealPrice };
@@ -19,8 +20,8 @@ function splitByWeight<T>(
   items: T[],
   weightOf: (item: T) => number,
   total: number,
-): { item: T; amount: number }[] {
-  const result: { item: T; amount: number }[] = [];
+): Array<{ item: T; amount: number }> {
+  const result: Array<{ item: T; amount: number }> = [];
   let assigned = 0;
   items.forEach((item, i) => {
     const isLast = i === items.length - 1;
@@ -56,25 +57,28 @@ export async function submitTransaction(
 
   return prisma.$transaction(async (tx) => {
     const users = await tx.user.findMany({ where: { id: { in: userIds } } });
-    if (users.length === 0) throw new AppError("No users found");
-
-    const group = await tx.transactionGroup.create({
-      data: {
-        stockId,
-        type,
-        count,
-        unitPrice,
-        commission,
-        totalCost,
-      },
-    });
+    if (users.length !== userIds.length)
+      throw new AppError("Some users not found");
 
     if (type === "buy") {
       // Split by each participant's cash balance -- buying power comes from cash on hand.
       const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
-      if (totalCash <= 0) {
-        throw new AppError("Selected users have no cash available to buy with");
+      if (totalCash < totalCost) {
+        throw new AppError(
+          `Selected users have no sufficient cash available for this transaction. The total available cash is $${normalizePrice(totalCash)}`,
+        );
       }
+
+      const group = await tx.transactionGroup.create({
+        data: {
+          stockId,
+          type,
+          count,
+          unitPrice,
+          commission,
+          totalCost,
+        },
+      });
 
       const splitCounts = splitByWeight(
         users,
@@ -112,6 +116,7 @@ export async function submitTransaction(
           },
         });
       }
+      return group;
     } else {
       // Sell: split by each participant's current share holdings for this stock.
       const shares = await tx.userShare.findMany({
@@ -119,9 +124,20 @@ export async function submitTransaction(
       });
 
       const totalShares = shares.reduce((sum, s) => sum + s.count, 0);
-      if (totalShares <= 0) {
-        throw new AppError("Selected users have no shares to sell");
+      if (totalShares <= count) {
+        throw new AppError(`Selected users have no sufficient shares to sell. The total available shares are ${totalShares}`);
       }
+
+      const group = await tx.transactionGroup.create({
+        data: {
+          stockId,
+          type,
+          count,
+          unitPrice,
+          commission,
+          totalCost,
+        },
+      });
 
       const splitCounts = splitByWeight(
         shares,
@@ -158,9 +174,8 @@ export async function submitTransaction(
           },
         });
       }
+      return group;
     }
-
-    return group;
   });
 }
 
