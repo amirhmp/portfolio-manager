@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -83,7 +84,7 @@ export default function Sidebar() {
             </span>
           )}
         </div>
-        <div className="mt-4 ledger-rule" />
+        <div className={`mt-4 ledger-rule ${collapsed ? "w-full!" : ""}`} />
       </div>
 
       <nav
