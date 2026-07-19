@@ -43,9 +43,9 @@ export default function RootLayout({
       )}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex bg-background">
+      <body className="h-full flex overflow-hidden bg-background">
         <Sidebar />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 h-full overflow-y-auto">
           <div className="mx-auto max-w-6xl px-6 py-10 sm:px-10">
             {children}
           </div>
