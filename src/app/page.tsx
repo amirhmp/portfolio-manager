@@ -1,4 +1,5 @@
 import PageHeader from "@/components/page-header";
+import PortfolioPieChart from "@/components/portfolio-pie-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -12,13 +13,55 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
 export default async function Dashboard() {
-  const users = await prisma.user.findMany({
-    include: {
-      shares: { include: { stock: true } },
-    },
-  });
+  const [users, stocks, lastPriceGroups] = await Promise.all([
+    prisma.user.findMany({
+      include: {
+        shares: { include: { stock: true } },
+      },
+    }),
+    prisma.stock.findMany({
+      orderBy: { name: "asc" },
+      include: { shares: true },
+    }),
+    // Most recent priced trade per stock, used below as a stand-in "current
+    // price" -- there's no live market price field in the schema, so a
+    // stock's last traded unitPrice is the best available valuation basis.
+    prisma.transactionGroup.findMany({
+      where: { stockId: { not: null }, unitPrice: { not: null } },
+      orderBy: { createdAt: "desc" },
+      select: { stockId: true, unitPrice: true },
+    }),
+  ]);
 
   const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
+
+  const lastPriceByStock = new Map<number, number>();
+  for (const g of lastPriceGroups) {
+    if (
+      g.stockId != null &&
+      g.unitPrice != null &&
+      !lastPriceByStock.has(g.stockId)
+    ) {
+      lastPriceByStock.set(g.stockId, g.unitPrice);
+    }
+  }
+
+  const sharesByStock = stocks
+    .map((stock) => ({
+      id: stock.id,
+      name: stock.name,
+      total: stock.shares.reduce((sum, s) => sum + s.count, 0),
+      lastPrice: lastPriceByStock.get(stock.id) ?? null,
+    }))
+    .filter((s) => s.total > 0);
+
+  const portfolioSlices = [
+    { name: "Cash", value: totalCash },
+    ...sharesByStock.map((s) => ({
+      name: s.name,
+      value: s.total * (s.lastPrice ?? 0),
+    })),
+  ];
 
   return (
     <div>
@@ -39,14 +82,12 @@ export default async function Dashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
-              Total Shares Held
+              Stocks Held
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="font-serif text-3xl font-medium tabular-nums text-primary">
-              {users
-                .reduce((sum, u) => sum + u.shares.length, 0)
-                .toLocaleString()}
+              {sharesByStock.length.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -64,6 +105,58 @@ export default async function Dashboard() {
         </Card>
       </div>
 
+      <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
+        Portfolio Composition
+      </h2>
+      <Card className="mb-8">
+        <CardContent className="pt-6">
+          <PortfolioPieChart slices={portfolioSlices} />
+          {sharesByStock.some((s) => s.lastPrice == null) && (
+            <p className="mt-4 text-xs text-muted-foreground">
+              {`Stocks with no recorded trade yet have no known price, so they're
+              valued at 0 here until their first transaction.`}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
+        Total Shares by Stock
+      </h2>
+      <Card className="mb-8">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Stock</TableHead>
+              <TableHead className="text-right">Total Shares</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sharesByStock.map((stock) => (
+              <TableRow key={stock.id}>
+                <TableCell className="font-medium">{stock.name}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
+                  {stock.total.toLocaleString()}
+                </TableCell>
+              </TableRow>
+            ))}
+            {sharesByStock.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={2}
+                  className="text-center py-8 text-muted-foreground"
+                >
+                  No shares held yet.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Card>
+
+      <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
+        Users
+      </h2>
       <Card>
         <Table>
           <TableHeader>
@@ -88,8 +181,10 @@ export default async function Dashboard() {
                   {user.cash.toLocaleString()}
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
-                  {user.shares.length}
-                  {user.shares.length === 1 ? "stock" : "stocks"}
+                  {user.shares.filter((s) => s.count > 0).length}
+                  {user.shares.filter((s) => s.count > 0).length === 1
+                    ? " stock"
+                    : " stocks"}
                 </TableCell>
               </TableRow>
             ))}
