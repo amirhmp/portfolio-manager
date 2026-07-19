@@ -76,6 +76,7 @@ const CreateUserForm = ({ stocks }: { stocks: Stock[] }) => {
                   step="any"
                   placeholder="0"
                   className="font-mono tabular-nums"
+                  maxFractions={3}
                 />
               </div>
             ))}
