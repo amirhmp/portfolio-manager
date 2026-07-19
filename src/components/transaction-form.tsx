@@ -152,13 +152,13 @@ export default function TransactionForm({
               <Label
                 htmlFor="type-buy"
                 className={cn(
-                  "flex flex-col gap-3 rounded-lg border p-4 transition-colors cursor-pointer",
+                  "flex flex-col gap-3 rounded-lg border p-4 transition-colors cursor-pointer items-start",
                   type === "buy"
                     ? "border-primary bg-primary/5 ring-1 ring-primary/40"
                     : "border-border bg-background/40 hover:bg-background/70",
                 )}
               >
-                <div className="flex items-center gap-2 self-start">
+                <div className="flex items-center gap-2">
                   <RadioGroupItem value="buy" id="type-buy" />
                   <span className="text-sm font-medium text-primary">Buy</span>
                 </div>
@@ -175,13 +175,13 @@ export default function TransactionForm({
               <Label
                 htmlFor="type-sell"
                 className={cn(
-                  "flex flex-col gap-3 rounded-lg border p-4 transition-colors cursor-pointer",
+                  "flex flex-col items-start gap-3 rounded-lg border p-4 transition-colors cursor-pointer",
                   type === "sell"
                     ? "border-primary bg-primary/5 ring-1 ring-primary/40"
                     : "border-border bg-background/40 hover:bg-background/70",
                 )}
               >
-                <div className="flex items-center gap-2 self-start">
+                <div className="flex items-center gap-2">
                   <RadioGroupItem value="sell" id="type-sell" />
                   <span className="text-sm font-medium text-destructive">
                     Sell
