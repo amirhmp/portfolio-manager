@@ -14,17 +14,20 @@ import CreateUserForm from "./create-user-form";
 import DeleteUserForm from "./delete-user-form";
 
 export default async function UsersPage() {
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { shares: true },
-  });
+  const [users, stocks] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { shares: true },
+    }),
+    prisma.stock.findMany({ orderBy: { name: "asc" } }),
+  ]);
 
   return (
     <div>
       <PageHeader eyebrow="Participants" title="Users" />
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <CreateUserForm />
+          <CreateUserForm stocks={stocks} />
         </CardContent>
       </Card>
 

@@ -15,7 +15,11 @@ import { revalidatePath } from "next/cache";
 // ─── Users ────────────────────────────────────────────
 
 export const createUser = withErrorHandling(
-  async (name: string, initialCapital: number) => {
+  async (
+    name: string,
+    initialCapital: number,
+    initialShares: Record<number, number> = {},
+  ) => {
     const user = await prisma.user.create({
       data: { name, cash: 0 },
     });
@@ -24,6 +28,21 @@ export const createUser = withErrorHandling(
     // capital-increased transaction, not a separate stored field.
     if (initialCapital > 0) {
       await submitCapitalIncrease(user.id, initialCapital);
+    }
+
+    // Initial shares are a starting balance, not logged as a trade -- they
+    // are optional per-stock counts entered on the create-user form.
+    const shareEntries = Object.entries(initialShares).filter(
+      ([, count]) => count > 0,
+    );
+    if (shareEntries.length > 0) {
+      await prisma.userShare.createMany({
+        data: shareEntries.map(([stockId, count]) => ({
+          userId: user.id,
+          stockId: Number(stockId),
+          count,
+        })),
+      });
     }
 
     revalidatePath("/users");
