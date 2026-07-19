@@ -56,11 +56,22 @@ export async function submitTransaction(
   const totalCost = realPrice * count;
 
   return prisma.$transaction(async (tx) => {
-    const users = await tx.user.findMany({ where: { id: { in: userIds } } });
-    if (users.length !== userIds.length)
+    const foundUsers = await tx.user.findMany({
+      where: { id: { in: userIds } },
+    });
+    if (foundUsers.length !== userIds.length)
       throw new AppError("Some users not found");
 
     if (type === "buy") {
+      // Users with no cash on hand are fully excluded from the calculation --
+      // both from the split and from the total-cash denominator.
+      const users = foundUsers.filter((u) => u.cash > 0);
+      if (users.length === 0) {
+        throw new AppError(
+          "None of the selected users have any cash available for this transaction.",
+        );
+      }
+
       // Split by each participant's cash balance -- buying power comes from cash on hand.
       const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
       if (totalCash < totalCost) {
@@ -119,9 +130,18 @@ export async function submitTransaction(
       return group;
     } else {
       // Sell: split by each participant's current share holdings for this stock.
-      const shares = await tx.userShare.findMany({
+      // Users with no shares (count <= 0) for this stock are fully excluded
+      // from the calculation -- both from the split and from the
+      // total-shares denominator.
+      const allShares = await tx.userShare.findMany({
         where: { userId: { in: userIds }, stockId },
       });
+      const shares = allShares.filter((s) => s.count > 0);
+      if (shares.length === 0) {
+        throw new AppError(
+          "None of the selected users hold any shares of this stock.",
+        );
+      }
 
       const totalShares = shares.reduce((sum, s) => sum + s.count, 0);
       if (totalShares <= count) {
