@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Stock, User } from "@/generated/prisma/browser";
 import useSubmitForm from "@/hooks/useSubmitForm";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { PriceInput } from "./price/PriceInput";
 import {
   Select,
@@ -21,32 +23,69 @@ import {
   SelectValue,
 } from "./ui/select";
 
+type UserWithShares = User & { shares: { stockId: number; count: number }[] };
+
 export default function TransactionForm({
   users,
   stocks,
 }: {
-  users: User[];
+  users: UserWithShares[];
   stocks: Stock[];
 }) {
   const router = useRouter();
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
-  const [type, setType] = useState<"buy" | "sell">("buy");
+  const [type, setType] = useState<"buy" | "sell" | undefined>(undefined);
+  const [stockId, setStockId] = useState<number | null>(null);
   const { isPending, request: createTransaction } = useSubmitForm(
     createTransactionAction,
   );
 
+  const selectedStock = stocks.find((s) => s.id === stockId);
+
+  function shareCountFor(user: UserWithShares, forStockId?: number | null) {
+    if (!forStockId) return 0;
+    return user.shares.find((s) => s.stockId === forStockId)?.count ?? 0;
+  }
+
+  function isEligible(user: UserWithShares) {
+    if (type === "sell") return shareCountFor(user, stockId) > 0;
+    // buy (or type not yet chosen): eligibility is based on cash
+    return user.cash > 0;
+  }
+
+  function toggleUser(userId: number, checked: boolean) {
+    setSelectedUsers((prev) =>
+      checked ? [...prev, userId] : prev.filter((id) => id !== userId),
+    );
+  }
+
+  const totalCash = useMemo(
+    () => users.reduce((sum, u) => sum + u.cash, 0),
+    [users],
+  );
+
+  const totalSharesForStock = useMemo(
+    () => users.reduce((sum, u) => sum + shareCountFor(u, stockId), 0),
+    [users, stockId],
+  );
+
   async function handleSubmit(formData: FormData) {
-    const stockId = parseInt(formData.get("stock") as string);
+    if (!type) {
+      toast.error("Please select a transaction type (Buy or Sell)");
+      return;
+    }
+
+    const stockIdValue = parseInt(formData.get("stock") as string);
     const count = parseFloat(formData.get("count") as string);
     const unitPrice = parseFloat(formData.get("unitPrice") as string);
     const commission = parseFloat(
       (formData.get("commission") as string) || "0",
     );
 
-    if (selectedUsers.length > 0 && stockId && count > 0 && unitPrice > 0) {
+    if (selectedUsers.length > 0 && stockIdValue && count > 0 && unitPrice > 0) {
       const result = await createTransaction(
         selectedUsers,
-        stockId,
+        stockIdValue,
         count,
         type,
         unitPrice,
@@ -57,58 +96,23 @@ export default function TransactionForm({
   }
 
   return (
-    <Card className="max-w-xl">
+    <Card className="max-w-2xl">
       <CardContent className="pt-6">
         <form action={handleSubmit} className="space-y-5">
-          <div>
-            <Label className="mb-2">Participating Users</Label>
-            <div className="space-y-2 rounded-md border border-border bg-background/40 p-3 max-h-48 overflow-y-auto">
-              {users.map((user) => (
-                <div key={user.id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`user-${user.id}`}
-                    checked={selectedUsers.includes(user.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedUsers((prev) => [...prev, user.id]);
-                      } else {
-                        setSelectedUsers((prev) =>
-                          prev.filter((id) => id !== user.id),
-                        );
-                      }
-                    }}
-                  />
-                  <Label
-                    htmlFor={`user-${user.id}`}
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    {user.name}
-                    <span className="font-mono tabular-nums text-muted-foreground">
-                      ({user.cash.toLocaleString()})
-                    </span>
-                  </Label>
-                </div>
-              ))}
-              {users.length === 0 && (
-                <p className="text-muted-foreground text-sm">
-                  No users.&nbsp;
-                  <Link
-                    href="/users"
-                    className="text-primary underline underline-offset-4"
-                  >
-                    Create one first
-                  </Link>
-                  .
-                </p>
-              )}
-            </div>
-          </div>
-
           <div>
             <Label htmlFor="stock" className="mb-1.5">
               Stock
             </Label>
-            <Select id="stock" name="stock" required>
+            <Select
+              id="stock"
+              name="stock"
+              required
+              value={stockId}
+              onValueChange={(value) => {
+                setStockId(value as number);
+                setSelectedUsers([]);
+              }}
+            >
               <SelectTrigger className="w-45">
                 <SelectValue>
                   {(value: number) =>
@@ -130,30 +134,128 @@ export default function TransactionForm({
 
           <div>
             <Label className="mb-2">Type</Label>
+            {/* The RadioGroup is always given a defined string ("" while
+                unset) so it stays controlled from the first render --
+                handing it `undefined` causes it to start uncontrolled and
+                then flip to controlled on the first click, which throws.
+                Each RadioGroupItem is embedded in its own full card, so the
+                card itself IS the radio option. */}
             <RadioGroup
-              value={type}
-              onValueChange={(value) => setType(value as "buy" | "sell")}
-              className="flex gap-4"
+              value={type ?? ""}
+              onValueChange={(value) => {
+                setType(value as "buy" | "sell");
+                // Selections may no longer be eligible under the new type.
+                setSelectedUsers([]);
+              }}
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2"
             >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="buy" id="type-buy" />
-                <Label
-                  htmlFor="type-buy"
-                  className="text-primary font-medium cursor-pointer"
-                >
-                  Buy
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="sell" id="type-sell" />
-                <Label
-                  htmlFor="type-sell"
-                  className="text-destructive font-medium cursor-pointer"
-                >
-                  Sell
-                </Label>
-              </div>
+              <Label
+                htmlFor="type-buy"
+                className={cn(
+                  "flex flex-col gap-3 rounded-lg border p-4 transition-colors cursor-pointer",
+                  type === "buy"
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                    : "border-border bg-background/40 hover:bg-background/70",
+                )}
+              >
+                <div className="flex items-center gap-2 self-start">
+                  <RadioGroupItem value="buy" id="type-buy" />
+                  <span className="text-sm font-medium text-primary">Buy</span>
+                </div>
+                <div>
+                  <p className="font-mono text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
+                    Total Cash
+                  </p>
+                  <p className="font-serif text-2xl font-semibold tabular-nums text-foreground">
+                    {totalCash.toLocaleString()}
+                  </p>
+                </div>
+              </Label>
+
+              <Label
+                htmlFor="type-sell"
+                className={cn(
+                  "flex flex-col gap-3 rounded-lg border p-4 transition-colors cursor-pointer",
+                  type === "sell"
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                    : "border-border bg-background/40 hover:bg-background/70",
+                )}
+              >
+                <div className="flex items-center gap-2 self-start">
+                  <RadioGroupItem value="sell" id="type-sell" />
+                  <span className="text-sm font-medium text-destructive">
+                    Sell
+                  </span>
+                </div>
+                <div>
+                  <p className="font-mono text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
+                    Total Shares{selectedStock ? ` (${selectedStock.name})` : ""}
+                  </p>
+                  <p className="font-serif text-2xl font-semibold tabular-nums text-primary">
+                    {stockId != null ? totalSharesForStock.toLocaleString() : "—"}
+                  </p>
+                </div>
+              </Label>
             </RadioGroup>
+          </div>
+
+          <div>
+            <Label className="mb-2">Participating Users</Label>
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+              {users.map((user) => {
+                const eligible = !type || isEligible(user);
+                const selected = selectedUsers.includes(user.id);
+                const showShares = type === "sell";
+                const metric = showShares
+                  ? shareCountFor(user, stockId)
+                  : user.cash;
+
+                return (
+                  <Label
+                    key={user.id}
+                    htmlFor={`user-${user.id}`}
+                    className={cn(
+                      "flex items-center gap-2.5 rounded-lg border p-3 transition-colors",
+                      eligible
+                        ? "cursor-pointer"
+                        : "cursor-not-allowed opacity-40",
+                      selected
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                        : "border-border bg-background/40 hover:bg-background/70",
+                    )}
+                  >
+                    <Checkbox
+                      id={`user-${user.id}`}
+                      disabled={!eligible}
+                      checked={selected}
+                      onCheckedChange={(checked) =>
+                        toggleUser(user.id, !!checked)
+                      }
+                    />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm font-medium">
+                        {user.name}
+                      </span>
+                      <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                        {showShares ? "shares" : "cash"}: {metric.toLocaleString()}
+                      </span>
+                    </div>
+                  </Label>
+                );
+              })}
+              {users.length === 0 && (
+                <p className="col-span-full text-muted-foreground text-sm">
+                  No users.&nbsp;
+                  <Link
+                    href="/users"
+                    className="text-primary underline underline-offset-4"
+                  >
+                    Create one first
+                  </Link>
+                  .
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
