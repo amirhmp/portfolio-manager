@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Stock } from "@/generated/prisma/browser";
 import useSubmitForm from "@/hooks/useSubmitForm";
-import { createUser as createUserAction } from "../actions";
+import { useTranslations } from "next-intl";
+import { createUser as createUserAction } from "@/app/actions";
 
 const CreateUserForm = ({ stocks }: { stocks: Stock[] }) => {
+  const t = useTranslations("CreateUserForm");
   const { isPending, request: createUser } = useSubmitForm(createUserAction);
 
   const handleCreate = (formData: FormData) => {
@@ -34,13 +36,13 @@ const CreateUserForm = ({ stocks }: { stocks: Stock[] }) => {
       <div className="flex flex-wrap gap-3 items-end">
         <div className="flex-1 min-w-40">
           <Label htmlFor="name" className="mb-1.5">
-            Name
+            {t("name")}
           </Label>
-          <Input id="name" name="name" required placeholder="User name" />
+          <Input id="name" name="name" required placeholder={t("namePlaceholder")} />
         </div>
         <div className="w-40">
           <Label htmlFor="capital" className="mb-1.5">
-            Initial Capital
+            {t("initialCapital")}
           </Label>
           <PriceInput
             id="capital"
@@ -51,13 +53,13 @@ const CreateUserForm = ({ stocks }: { stocks: Stock[] }) => {
           />
         </div>
         <Button type="submit" loading={isPending}>
-          Add User
+          {t("submit")}
         </Button>
       </div>
 
       {stocks.length > 0 && (
         <div>
-          <Label className="mb-1.5">Initial Shares (optional)</Label>
+          <Label className="mb-1.5">{t("initialShares")}</Label>
           <div className="flex flex-wrap gap-3">
             {stocks.map((stock) => (
               <div key={stock.id} className="w-36">

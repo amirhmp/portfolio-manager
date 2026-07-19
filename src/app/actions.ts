@@ -10,6 +10,7 @@ import {
 } from "@/lib/gold-accounting";
 import { prisma } from "@/lib/prisma";
 import { withErrorHandling } from "@/lib/with-action-error-handling";
+import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 
 // ─── Users ────────────────────────────────────────────
@@ -75,7 +76,10 @@ export const createStock = withErrorHandling(async (name: string) => {
 });
 
 export const deleteStock = withErrorHandling(async (id: number) => {
-  if (id === GOLD_STOCK_ID) throw new AppError("Can not delete 'Gold'");
+  if (id === GOLD_STOCK_ID) {
+    const t = await getTranslations("Errors");
+    throw new AppError(t("cannotDeleteGold"));
+  }
   await prisma.stock.delete({ where: { id } });
   revalidatePath("/stocks");
 });

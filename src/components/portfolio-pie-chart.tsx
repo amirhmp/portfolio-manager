@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 export type PortfolioSlice = { name: string; value: number };
@@ -38,6 +39,7 @@ export default function PortfolioPieChart({
 }: {
   slices: PortfolioSlice[];
 }) {
+  const t = useTranslations("PortfolioPieChart");
   const nonZero = slices.filter((s) => s.value > 0);
   const total = nonZero.reduce((sum, s) => sum + s.value, 0);
 
@@ -64,7 +66,7 @@ export default function PortfolioPieChart({
   if (total <= 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No portfolio value to chart yet.
+        {t("noValue")}
       </p>
     );
   }

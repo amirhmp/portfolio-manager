@@ -9,10 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 export default async function Dashboard() {
+  const t = await getTranslations("Dashboard");
+  const tPie = await getTranslations("PortfolioPieChart");
+
   const [users, stocks, lastPriceGroups] = await Promise.all([
     prisma.user.findMany({
       include: {
@@ -56,7 +60,7 @@ export default async function Dashboard() {
     .filter((s) => s.total > 0);
 
   const portfolioSlices = [
-    { name: "Cash", value: totalCash },
+    { name: tPie("cash"), value: totalCash },
     ...sharesByStock.map((s) => ({
       name: s.name,
       value: s.total * (s.lastPrice ?? 0),
@@ -65,12 +69,12 @@ export default async function Dashboard() {
 
   return (
     <div>
-      <PageHeader eyebrow="Overview" title="Dashboard" />
+      <PageHeader eyebrow={t("eyebrow")} title={t("title")} />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
-              Total Users
+              {t("totalUsers")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -82,7 +86,7 @@ export default async function Dashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
-              Stocks Held
+              {t("stocksHeld")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -94,7 +98,7 @@ export default async function Dashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
-              Total Cash
+              {t("totalCash")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -106,29 +110,28 @@ export default async function Dashboard() {
       </div>
 
       <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
-        Portfolio Composition
+        {t("portfolioComposition")}
       </h2>
       <Card className="mb-8">
         <CardContent className="pt-6">
           <PortfolioPieChart slices={portfolioSlices} />
           {sharesByStock.some((s) => s.lastPrice == null) && (
             <p className="mt-4 text-xs text-muted-foreground">
-              {`Stocks with no recorded trade yet have no known price, so they're
-              valued at 0 here until their first transaction.`}
+              {t("noPriceNote")}
             </p>
           )}
         </CardContent>
       </Card>
 
       <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
-        Total Shares by Stock
+        {t("totalSharesByStock")}
       </h2>
       <Card className="mb-8">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Stock</TableHead>
-              <TableHead className="text-right">Total Shares</TableHead>
+              <TableHead>{t("stock")}</TableHead>
+              <TableHead className="text-right">{t("totalShares")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -146,7 +149,7 @@ export default async function Dashboard() {
                   colSpan={2}
                   className="text-center py-8 text-muted-foreground"
                 >
-                  No shares held yet.
+                  {t("noSharesYet")}
                 </TableCell>
               </TableRow>
             )}
@@ -155,36 +158,35 @@ export default async function Dashboard() {
       </Card>
 
       <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
-        Users
+        {t("usersTitle")}
       </h2>
       <Card>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead className="text-right">Cash</TableHead>
-              <TableHead className="text-right">Shares</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead className="text-right">{t("cash")}</TableHead>
+              <TableHead className="text-right">{t("shares")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">
-                  <a
+                  <Link
                     href={`/users/${user.id}`}
                     className="text-foreground hover:text-primary transition-colors"
                   >
                     {user.name}
-                  </a>
+                  </Link>
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
                   {user.cash.toLocaleString()}
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
-                  {user.shares.filter((s) => s.count > 0).length}
-                  {user.shares.filter((s) => s.count > 0).length === 1
-                    ? " stock"
-                    : " stocks"}
+                  {t("shareCount", {
+                    count: user.shares.filter((s) => s.count > 0).length,
+                  })}
                 </TableCell>
               </TableRow>
             ))}
@@ -194,12 +196,12 @@ export default async function Dashboard() {
                   colSpan={3}
                   className="text-center py-10 text-muted-foreground"
                 >
-                  No users yet.&nbsp;
+                  {t("noUsersYet")}&nbsp;
                   <Link
                     href="/users"
                     className="text-primary underline underline-offset-4"
                   >
-                    Create one
+                    {t("createOne")}
                   </Link>
                   .
                 </TableCell>

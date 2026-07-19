@@ -16,7 +16,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Link } from "@/i18n/navigation";
 import { getRealPrice } from "@/lib/pricing";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 export type TransactionGroupParticipant = {
@@ -49,35 +51,37 @@ const typeBadgeVariant: Record<
   "cash-exited": "secondary",
 };
 
-const typeLabel: Record<string, string> = {
-  buy: "BUY",
-  sell: "SELL",
-  "capital-increased": "CAPITAL +",
-  "cash-exited": "CASH OUT",
-};
-
 export default function TransactionGroupsTable({
   groups,
 }: {
   groups: TransactionGroupRow[];
 }) {
+  const t = useTranslations("TransactionGroupsTable");
+  const locale = useLocale();
   const [selected, setSelected] = useState<TransactionGroupRow | null>(null);
   const isTrade = (type: string) => type === "buy" || type === "sell";
+
+  const typeLabel: Record<string, string> = {
+    buy: t("typeBuy"),
+    sell: t("typeSell"),
+    "capital-increased": t("typeCapitalIncreased"),
+    "cash-exited": t("typeCashExited"),
+  };
 
   return (
     <>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Stock</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead className="text-right">Participants</TableHead>
-            <TableHead className="text-right">Total Count</TableHead>
-            <TableHead className="text-right">Unit Price</TableHead>
-            <TableHead className="text-right">Commission</TableHead>
-            <TableHead className="text-right">Real Price</TableHead>
-            <TableHead className="text-right">Total Cost</TableHead>
+            <TableHead>{t("date")}</TableHead>
+            <TableHead>{t("stock")}</TableHead>
+            <TableHead>{t("type")}</TableHead>
+            <TableHead className="text-right">{t("participants")}</TableHead>
+            <TableHead className="text-right">{t("totalCount")}</TableHead>
+            <TableHead className="text-right">{t("unitPrice")}</TableHead>
+            <TableHead className="text-right">{t("commission")}</TableHead>
+            <TableHead className="text-right">{t("realPrice")}</TableHead>
+            <TableHead className="text-right">{t("totalCost")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -99,7 +103,7 @@ export default function TransactionGroupsTable({
                 className="cursor-pointer"
               >
                 <TableCell className="text-muted-foreground">
-                  {new Date(group.dealDate).toLocaleDateString()}
+                  {new Date(group.dealDate).toLocaleDateString(locale)}
                 </TableCell>
                 <TableCell className="font-medium">
                   {group.stock?.name ?? "—"}
@@ -136,7 +140,7 @@ export default function TransactionGroupsTable({
                 colSpan={9}
                 className="text-center py-10 text-muted-foreground"
               >
-                No transactions yet.
+                {t("noTransactionsYet")}
               </TableCell>
             </TableRow>
           )}
@@ -159,14 +163,14 @@ export default function TransactionGroupsTable({
                     : typeLabel[selected.type] ?? selected.type.toUpperCase()}
                 </DialogTitle>
                 <DialogDescription>
-                  {new Date(selected.dealDate).toLocaleString()}
+                  {new Date(selected.dealDate).toLocaleString(locale)}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="grid grid-cols-2 gap-3 rounded-md border border-border bg-background/40 p-4 sm:grid-cols-4">
                 <div>
                   <p className="font-mono text-[0.65rem] uppercase tracking-wide text-muted-foreground">
-                    Stock
+                    {t("stock")}
                   </p>
                   <p className="font-serif text-lg font-medium text-foreground">
                     {selected.stock?.name ?? "—"}
@@ -174,7 +178,7 @@ export default function TransactionGroupsTable({
                 </div>
                 <div>
                   <p className="font-mono text-[0.65rem] uppercase tracking-wide text-muted-foreground">
-                    Unit Price
+                    {t("unitPrice")}
                   </p>
                   <p className="font-mono text-lg font-medium tabular-nums text-foreground">
                     {isTrade(selected.type) && selected.unitPrice != null
@@ -184,7 +188,7 @@ export default function TransactionGroupsTable({
                 </div>
                 <div>
                   <p className="font-mono text-[0.65rem] uppercase tracking-wide text-muted-foreground">
-                    Commission
+                    {t("commission")}
                   </p>
                   <p className="font-mono text-lg font-medium tabular-nums text-foreground">
                     {isTrade(selected.type) ? `${selected.commission ?? 0}%` : "—"}
@@ -192,7 +196,7 @@ export default function TransactionGroupsTable({
                 </div>
                 <div>
                   <p className="font-mono text-[0.65rem] uppercase tracking-wide text-muted-foreground">
-                    Total Count
+                    {t("totalCount")}
                   </p>
                   <p className="font-mono text-lg font-medium tabular-nums text-primary">
                     {selected.count.toLocaleString()}
@@ -202,16 +206,16 @@ export default function TransactionGroupsTable({
 
               <div>
                 <p className="mb-2 font-mono text-[0.65rem] uppercase tracking-wide text-muted-foreground">
-                  Participant Breakdown
+                  {t("participantBreakdown")}
                 </p>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead className="text-right">Count</TableHead>
-                      <TableHead className="text-right">Cost</TableHead>
-                      <TableHead className="text-right">% of Count</TableHead>
-                      <TableHead className="text-right">% of Cost</TableHead>
+                      <TableHead>{t("user")}</TableHead>
+                      <TableHead className="text-right">{t("count")}</TableHead>
+                      <TableHead className="text-right">{t("cost")}</TableHead>
+                      <TableHead className="text-right">{t("percentOfCount")}</TableHead>
+                      <TableHead className="text-right">{t("percentOfCost")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -230,12 +234,12 @@ export default function TransactionGroupsTable({
                       return (
                         <TableRow key={p.id}>
                           <TableCell className="font-medium">
-                            <a
+                            <Link
                               href={`/users/${p.userId}`}
                               className="text-foreground hover:text-primary transition-colors"
                             >
                               {p.userName}
-                            </a>
+                            </Link>
                           </TableCell>
                           <TableCell className="text-right font-mono tabular-nums">
                             {p.count.toLocaleString()}

@@ -1,8 +1,10 @@
 import PageHeader from "@/components/page-header";
 import TransactionForm from "@/components/transaction-form";
 import { prisma } from "@/lib/prisma";
+import { getTranslations } from "next-intl/server";
 
 export default async function NewTransactionPage() {
+  const t = await getTranslations("NewTransaction");
   const users = await prisma.user.findMany({
     orderBy: { name: "asc" },
     include: { shares: true },
@@ -11,7 +13,7 @@ export default async function NewTransactionPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Record entry" title="New Transaction" />
+      <PageHeader eyebrow={t("eyebrow")} title={t("title")} />
       <TransactionForm users={users} stocks={stocks} />
     </div>
   );

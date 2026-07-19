@@ -5,6 +5,7 @@ import { PriceInput } from "@/components/price/PriceInput";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import useSubmitForm from "@/hooks/useSubmitForm";
+import { useTranslations } from "next-intl";
 
 function ExitUserCashForm({
   userId,
@@ -13,6 +14,7 @@ function ExitUserCashForm({
   userId: number;
   maxAmount: number;
 }) {
+  const t = useTranslations("ExitUserCashForm");
   const { isPending, request: exitUserCash } =
     useSubmitForm(exitUserCashAction);
 
@@ -27,7 +29,7 @@ function ExitUserCashForm({
     <form action={handle} className="flex gap-3 items-end">
       <div className="flex-1">
         <Label htmlFor="exit-amount" className="mb-1.5">
-          Amount
+          {t("amount")}
         </Label>
         <PriceInput
           id="exit-amount"
@@ -41,7 +43,7 @@ function ExitUserCashForm({
         />
       </div>
       <Button type="submit" variant="destructive" loading={isPending}>
-        Exit Cash
+        {t("submit")}
       </Button>
     </form>
   );

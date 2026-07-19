@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { AppError } from "./errors";
 import { getRealPrice, type TradeType } from "./pricing";
 import { prisma } from "./prisma";
@@ -53,6 +54,7 @@ export async function submitTransaction(
   commission: number = 0,
   dealDate?: Date,
 ) {
+  const t = await getTranslations("Errors");
   const realPrice = getRealPrice(unitPrice, commission, type);
   const totalCost = realPrice * count;
 
@@ -61,23 +63,21 @@ export async function submitTransaction(
       where: { id: { in: userIds } },
     });
     if (foundUsers.length !== userIds.length)
-      throw new AppError("Some users not found");
+      throw new AppError(t("usersNotFound"));
 
     if (type === "buy") {
       // Users with no cash on hand are fully excluded from the calculation --
       // both from the split and from the total-cash denominator.
       const users = foundUsers.filter((u) => u.cash > 0);
       if (users.length === 0) {
-        throw new AppError(
-          "None of the selected users have any cash available for this transaction.",
-        );
+        throw new AppError(t("noCashUsers"));
       }
 
       // Split by each participant's cash balance -- buying power comes from cash on hand.
       const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
       if (totalCash < totalCost) {
         throw new AppError(
-          `Selected users have no sufficient cash available for this transaction. The total available cash is $${normalizePrice(totalCash)}`,
+          t("insufficientCash", { amount: normalizePrice(totalCash) }),
         );
       }
 
@@ -140,15 +140,13 @@ export async function submitTransaction(
       });
       const shares = allShares.filter((s) => s.count > 0);
       if (shares.length === 0) {
-        throw new AppError(
-          "None of the selected users hold any shares of this stock.",
-        );
+        throw new AppError(t("noSharesUsers"));
       }
 
       const totalShares = shares.reduce((sum, s) => sum + s.count, 0);
       if (totalShares <= count) {
         throw new AppError(
-          `Selected users have no sufficient shares to sell. The total available shares are ${totalShares}`,
+          t("insufficientShares", { amount: totalShares }),
         );
       }
 
@@ -210,11 +208,12 @@ export async function submitTransaction(
  * single-participant TransactionGroup for a consistent data model).
  */
 export async function submitCapitalIncrease(userId: number, amount: number) {
-  if (amount <= 0) throw new AppError("Amount must be greater than 0");
+  const t = await getTranslations("Errors");
+  if (amount <= 0) throw new AppError(t("amountMustBePositive"));
 
   return prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: userId } });
-    if (!user) throw new AppError("User not found");
+    if (!user) throw new AppError(t("userNotFound"));
 
     const group = await tx.transactionGroup.create({
       data: {
@@ -247,12 +246,13 @@ export async function submitCapitalIncrease(userId: number, amount: number) {
  * logged as a "cash-exited" transaction.
  */
 export async function submitCashExit(userId: number, amount: number) {
-  if (amount <= 0) throw new AppError("Amount must be greater than 0");
+  const t = await getTranslations("Errors");
+  if (amount <= 0) throw new AppError(t("amountMustBePositive"));
 
   return prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: userId } });
-    if (!user) throw new AppError("User not found");
-    if (user.cash < amount) throw new AppError("Insufficient cash to exit");
+    if (!user) throw new AppError(t("userNotFound"));
+    if (user.cash < amount) throw new AppError(t("insufficientCashExit"));
 
     const group = await tx.transactionGroup.create({
       data: {

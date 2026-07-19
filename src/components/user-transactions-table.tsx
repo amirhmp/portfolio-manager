@@ -12,27 +12,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getRealPrice } from "@/lib/pricing";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 export type UserTransactionRow = {
   id: number;
   count: number;
   totalCost: number;
-  createdAt: Date | string;
   transactionGroup: {
     type: string;
     unitPrice: number | null;
     commission: number | null;
     stock: { name: string } | null;
+    createdAt: Date | string;
+    dealDate: Date | string;
   };
 };
-
-const TYPE_OPTIONS: { value: string; label: string }[] = [
-  { value: "buy", label: "Buy" },
-  { value: "sell", label: "Sell" },
-  { value: "capital-increased", label: "Capital Increased" },
-  { value: "cash-exited", label: "Cash Exited" },
-];
 
 const typeBadgeVariant: Record<
   string,
@@ -44,19 +39,28 @@ const typeBadgeVariant: Record<
   "cash-exited": "secondary",
 };
 
-const typeLabel: Record<string, string> = {
-  buy: "BUY",
-  sell: "SELL",
-  "capital-increased": "CAPITAL +",
-  "cash-exited": "CASH OUT",
-};
-
 export default function UserTransactionsTable({
   transactions,
 }: {
   transactions: UserTransactionRow[];
 }) {
+  const t = useTranslations("UserTransactionsTable");
+  const locale = useLocale();
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+
+  const TYPE_OPTIONS: { value: string; label: string }[] = [
+    { value: "buy", label: t("typeBuy") },
+    { value: "sell", label: t("typeSell") },
+    { value: "capital-increased", label: t("typeCapitalIncreased") },
+    { value: "cash-exited", label: t("typeCashExited") },
+  ];
+
+  const typeLabel: Record<string, string> = {
+    buy: t("typeBuyBadge"),
+    sell: t("typeSellBadge"),
+    "capital-increased": t("typeCapitalIncreasedBadge"),
+    "cash-exited": t("typeCashExitedBadge"),
+  };
 
   const filtered = useMemo(() => {
     if (selectedTypes.length === 0) return transactions;
@@ -75,7 +79,7 @@ export default function UserTransactionsTable({
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-4 rounded-md border border-border bg-background/40 p-3">
         <span className="font-mono text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
-          Filter by type
+          {t("filterByType")}
         </span>
         {TYPE_OPTIONS.map((opt) => (
           <div key={opt.value} className="flex items-center gap-2">
@@ -98,7 +102,7 @@ export default function UserTransactionsTable({
             onClick={() => setSelectedTypes([])}
             className="ml-auto text-xs text-primary underline underline-offset-4"
           >
-            Clear
+            {t("clear")}
           </button>
         )}
       </div>
@@ -106,13 +110,13 @@ export default function UserTransactionsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Stock</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead className="text-right">Count</TableHead>
-            <TableHead className="text-right">Unit Price</TableHead>
-            <TableHead className="text-right">Real Price</TableHead>
-            <TableHead className="text-right">Total Cost</TableHead>
+            <TableHead>{t("date")}</TableHead>
+            <TableHead>{t("stock")}</TableHead>
+            <TableHead>{t("type")}</TableHead>
+            <TableHead className="text-right">{t("count")}</TableHead>
+            <TableHead className="text-right">{t("unitPrice")}</TableHead>
+            <TableHead className="text-right">{t("realPrice")}</TableHead>
+            <TableHead className="text-right">{t("totalCost")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -131,7 +135,7 @@ export default function UserTransactionsTable({
             return (
               <TableRow key={tx.id}>
                 <TableCell className="text-muted-foreground">
-                  {new Date(tx.createdAt).toLocaleDateString()}
+                  {new Date(tx.transactionGroup.createdAt).toLocaleDateString(locale)}
                 </TableCell>
                 <TableCell className="font-medium">
                   {group.stock?.name ?? "—"}
@@ -163,8 +167,8 @@ export default function UserTransactionsTable({
                 className="text-center py-8 text-muted-foreground"
               >
                 {transactions.length === 0
-                  ? "No transactions yet."
-                  : "No transactions match the selected filters."}
+                  ? t("noTransactionsYet")
+                  : t("noTransactionsMatch")}
               </TableCell>
             </TableRow>
           )}

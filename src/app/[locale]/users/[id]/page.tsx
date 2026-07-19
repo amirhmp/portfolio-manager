@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import UserTransactionsTable from "@/components/user-transactions-table";
 import { prisma } from "@/lib/prisma";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import ExitUserCashForm from "./exit-user-cash-form";
 import IncreaseCapitalForm from "./increase-capital-form";
@@ -19,6 +20,7 @@ export default async function UserDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getTranslations("UserDetail");
   const { id } = await params;
   const userId = parseInt(id);
 
@@ -28,18 +30,18 @@ export default async function UserDetailPage({
       shares: { include: { stock: true } },
       transactions: {
         include: { transactionGroup: { include: { stock: true } } },
-        orderBy: { createdAt: "desc" },
+        orderBy: { transactionGroup: { createdAt: "desc" } },
       },
     },
-  });
-
+  }); 
+  
   if (!user) return notFound();
 
   return (
     <div>
       <div className="mb-8">
         <p className="mb-1.5 font-mono text-[0.7rem] font-medium uppercase tracking-[0.16em] text-primary/80">
-          Participant
+          {t("eyebrow")}
         </p>
         <h1 className="font-serif text-3xl font-medium tracking-tight text-foreground">
           {user.name}
@@ -51,7 +53,7 @@ export default async function UserDetailPage({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
-              Cash
+              {t("cash")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -63,14 +65,16 @@ export default async function UserDetailPage({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
-              Shares
+              {t("shares")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="font-serif text-3xl font-medium tabular-nums text-foreground">
               {user.shares.length}{" "}
               <span className="text-lg text-muted-foreground">
-                {user.shares.length === 1 ? "stock" : "stocks"}
+                {user.shares.length === 1
+                  ? t("stockSingular")
+                  : t("stockPlural")}
               </span>
             </div>
           </CardContent>
@@ -81,13 +85,13 @@ export default async function UserDetailPage({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-foreground">
-              Increase Capital
+              {t("increaseCapital")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <IncreaseCapitalForm userId={user.id} />
             <p className="mt-2 text-[0.65rem] text-muted-foreground">
-              Logged as a capital-increased transaction.
+              {t("increaseCapitalNote")}
             </p>
           </CardContent>
         </Card>
@@ -95,27 +99,27 @@ export default async function UserDetailPage({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-foreground">
-              Save Profit
+              {t("saveProfit")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ExitUserCashForm userId={user.id} maxAmount={user.cash} />
             <p className="mt-2 text-[0.65rem] text-muted-foreground">
-              Logged as a cash-exited transaction. Decreases cash on hand.
+              {t("saveProfitNote")}
             </p>
           </CardContent>
         </Card>
       </div>
 
       <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
-        Portfolio
+        {t("portfolio")}
       </h2>
       <Card className="mb-8">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Stock</TableHead>
-              <TableHead className="text-right">Count</TableHead>
+              <TableHead>{t("stock")}</TableHead>
+              <TableHead className="text-right">{t("count")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -137,7 +141,7 @@ export default async function UserDetailPage({
                   colSpan={2}
                   className="text-center py-8 text-muted-foreground"
                 >
-                  No shares held.
+                  {t("noSharesHeld")}
                 </TableCell>
               </TableRow>
             )}
@@ -146,7 +150,7 @@ export default async function UserDetailPage({
       </Card>
 
       <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
-        Transaction History
+        {t("transactionHistory")}
       </h2>
       <Card>
         <div className="px-4">

@@ -1,52 +1,75 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeftRight,
   ChevronsLeft,
   ChevronsRight,
   Gem,
+  Languages,
   LayoutDashboard,
   PlusCircle,
   Sparkles,
   Users,
 } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-
-const groups = [
-  {
-    label: "Overview",
-    links: [{ href: "/", label: "Dashboard", icon: LayoutDashboard }],
-  },
-  {
-    label: "Manage",
-    links: [
-      { href: "/users", label: "Users", icon: Users },
-      { href: "/stocks", label: "Stocks", icon: Gem },
-    ],
-  },
-  {
-    label: "Activity",
-    links: [
-      { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-      { href: "/transactions/new", label: "New Transaction", icon: PlusCircle },
-      {
-        href: "/transactions/new/gold",
-        label: "New Gold Transaction",
-        icon: Sparkles,
-      },
-    ],
-  },
-];
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 const COLLAPSE_STORAGE_KEY = "sidebar-collapsed";
+const LOCALES = ["en", "fa"] as const;
 
 export default function Sidebar() {
+  const t = useTranslations("Sidebar");
+  const locale = useLocale();
   const pathname = usePathname();
+  const params = useParams();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+
+  const groups = [
+    {
+      label: t("groupOverview"),
+      links: [{ href: "/", label: t("dashboard"), icon: LayoutDashboard }],
+    },
+    {
+      label: t("groupManage"),
+      links: [
+        { href: "/users", label: t("users"), icon: Users },
+        { href: "/stocks", label: t("stocks"), icon: Gem },
+      ],
+    },
+    {
+      label: t("groupActivity"),
+      links: [
+        {
+          href: "/transactions",
+          label: t("transactions"),
+          icon: ArrowLeftRight,
+        },
+        {
+          href: "/transactions/new",
+          label: t("newTransaction"),
+          icon: PlusCircle,
+        },
+        {
+          href: "/transactions/new/gold",
+          label: t("newGoldTransaction"),
+          icon: Sparkles,
+        },
+      ],
+    },
+  ];
 
   useEffect(() => {
     const stored = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
@@ -61,10 +84,18 @@ export default function Sidebar() {
     });
   }
 
+  function switchLocale(nextLocale: string) {
+    router.replace(
+      // @ts-expect-error -- pathname/params are dynamic across routes
+      { pathname, params },
+      { locale: nextLocale },
+    );
+  }
+
   return (
     <aside
       className={cn(
-        "shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border transition-[width] duration-150",
+        "shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-e border-sidebar-border transition-[width] duration-150",
         collapsed ? "w-16" : "w-64",
       )}
     >
@@ -80,7 +111,7 @@ export default function Sidebar() {
           </span>
           {!collapsed && (
             <span className="font-serif text-[1.05rem] font-medium tracking-tight text-foreground">
-              Portfolio Manager
+              {t("brand")}
             </span>
           )}
         </div>
@@ -139,10 +170,49 @@ export default function Sidebar() {
           collapsed ? "px-2" : "px-3",
         )}
       >
+        {!collapsed && (
+          <div className="mb-1 flex items-center gap-2 px-3 py-1.5">
+            <Languages
+              className="size-4 shrink-0 text-sidebar-foreground/40"
+              strokeWidth={1.75}
+            />
+
+            <Select
+              id="stock"
+              name="stock"
+              required
+              onValueChange={(value) => {
+                switchLocale(value!);
+              }}
+              aria-label={t("language")}
+              value={locale}
+            >
+              <SelectTrigger className="w-45">
+                <SelectValue>
+                  {(value) =>
+                    LOCALES[LOCALES.indexOf(value)] === "en"
+                      ? "English"
+                      : "فارسی"
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {LOCALES.map((l) => (
+                    <SelectItem key={l} value={l}>
+                      {l === "en" ? "English" : "فارسی"}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={toggleCollapsed}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? t("expandSidebar") : t("collapseSidebar")}
           className={cn(
             "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
             collapsed && "justify-center px-0",
@@ -152,8 +222,11 @@ export default function Sidebar() {
             <ChevronsRight className="size-4 shrink-0" strokeWidth={1.75} />
           ) : (
             <>
-              <ChevronsLeft className="size-4 shrink-0" strokeWidth={1.75} />
-              Collapse
+              <ChevronsLeft
+                className="size-4 shrink-0 rtl:rotate-180"
+                strokeWidth={1.75}
+              />
+              {t("collapse")}
             </>
           )}
         </button>

@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { AppError } from "./errors";
 import { getExceptionMessage } from "./utils";
 
@@ -18,13 +19,11 @@ export function withErrorHandling<Args extends unknown[], T>(
       }
       const errorMsg = getExceptionMessage(err);
       console.error(errorMsg); // log unexpected errors server-side
-      return {
-        success: false,
-        message:
-          process.env.NODE_ENV === "production"
-            ? "Something went wrong. Please try again."
-            : errorMsg,
-      };
+      if (process.env.NODE_ENV === "production") {
+        const t = await getTranslations("Errors");
+        return { success: false, message: t("somethingWentWrong") };
+      }
+      return { success: false, message: errorMsg };
     }
   };
 }

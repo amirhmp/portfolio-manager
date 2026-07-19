@@ -1,0 +1,221 @@
+{
+  "Locale": {
+    "en": "انگلیسی",
+    "fa": "فارسی"
+  },
+  "Sidebar": {
+    "brand": "مدیریت پرتفوی",
+    "groupOverview": "نمای کلی",
+    "groupManage": "مدیریت",
+    "groupActivity": "فعالیت",
+    "dashboard": "داشبورد",
+    "users": "کاربران",
+    "stocks": "سهام",
+    "transactions": "تراکنش‌ها",
+    "newTransaction": "تراکنش جدید",
+    "newGoldTransaction": "تراکنش طلای جدید",
+    "collapse": "جمع کردن",
+    "expandSidebar": "باز کردن نوار کناری",
+    "collapseSidebar": "جمع کردن نوار کناری",
+    "language": "زبان"
+  },
+  "Dashboard": {
+    "eyebrow": "نمای کلی",
+    "title": "داشبورد",
+    "totalUsers": "تعداد کاربران",
+    "stocksHeld": "سهام نگهداری‌شده",
+    "totalCash": "مجموع موجودی نقدی",
+    "portfolioComposition": "ترکیب پرتفوی",
+    "noPriceNote": "سهامی که هنوز معامله‌ای برایشان ثبت نشده قیمتی ندارند، بنابراین تا اولین تراکنش، با ارزش صفر نمایش داده می‌شوند.",
+    "totalSharesByStock": "مجموع سهام به تفکیک نماد",
+    "stock": "سهم",
+    "totalShares": "مجموع سهام",
+    "noSharesYet": "هنوز سهامی نگهداری نمی‌شود.",
+    "usersTitle": "کاربران",
+    "name": "نام",
+    "cash": "موجودی نقدی",
+    "shares": "سهام",
+    "shareCount": "{count, plural, one {# سهم} other {# سهم}}",
+    "noUsersYet": "هنوز کاربری وجود ندارد.",
+    "createOne": "یکی بسازید"
+  },
+  "PortfolioPieChart": {
+    "cash": "موجودی نقدی",
+    "noValue": "هنوز ارزشی برای نمایش در نمودار پرتفوی وجود ندارد."
+  },
+  "Stocks": {
+    "eyebrow": "دارایی‌ها",
+    "title": "سهام",
+    "name": "نام",
+    "holders": "دارندگان",
+    "transactions": "تراکنش‌ها",
+    "actions": "عملیات",
+    "noStocksYet": "هنوز سهمی وجود ندارد. یکی از بالا بسازید."
+  },
+  "CreateStockForm": {
+    "label": "نام سهم / نماد",
+    "placeholder": "مثلاً AAPL، طلا، BTC",
+    "submit": "افزودن سهم",
+    "nameRequired": "ابتدا نام را وارد کنید"
+  },
+  "DeleteButton": {
+    "delete": "حذف"
+  },
+  "Transactions": {
+    "eyebrow": "دفتر معاملات",
+    "title": "تاریخچه تراکنش‌ها",
+    "noTransactionsYet": "هنوز تراکنشی ثبت نشده است.",
+    "createOne": "یکی بسازید"
+  },
+  "NewTransaction": {
+    "eyebrow": "ثبت ورودی",
+    "title": "تراکنش جدید"
+  },
+  "NewGoldTransaction": {
+    "eyebrow": "ثبت ورودی",
+    "title": "تراکنش طلای جدید"
+  },
+  "TransactionForm": {
+    "typeSelectRequired": "لطفاً نوع تراکنش را انتخاب کنید (خرید یا فروش)",
+    "stock": "سهم",
+    "selectAStock": "یک سهم انتخاب کنید",
+    "buy": "خرید",
+    "sell": "فروش",
+    "totalCash": "مجموع موجودی نقدی",
+    "totalShares": "مجموع سهام",
+    "participatingUsers": "کاربران شرکت‌کننده",
+    "noUsers": "کاربری وجود ندارد.",
+    "createOneFirst": "ابتدا یکی بسازید",
+    "shares": "سهام",
+    "cash": "موجودی نقدی",
+    "totalCount": "تعداد کل",
+    "unitPrice": "قیمت واحد",
+    "commission": "کارمزد٪",
+    "useCurrentDate": "استفاده از تاریخ فعلی",
+    "date": "تاریخ",
+    "submit": "ثبت تراکنش"
+  },
+  "GoldTransactionForm": {
+    "typeSelectRequired": "لطفاً نوع تراکنش را انتخاب کنید (خرید یا فروش)",
+    "selectOneUser": "حداقل یک کاربر انتخاب کنید",
+    "buy": "خرید",
+    "sell": "فروش",
+    "totalCash": "مجموع موجودی نقدی",
+    "totalGold": "مجموع طلا",
+    "participatingUsers": "کاربران شرکت‌کننده",
+    "noUsers": "کاربری وجود ندارد.",
+    "createOneFirst": "ابتدا یکی بسازید",
+    "gold": "طلا",
+    "cash": "موجودی نقدی",
+    "purchasedAmount": "مبلغ خرید (میلیون)",
+    "purchasedAmountPlaceholder": "مثلاً ۵۰ ← ۵۰,۰۰۰,۰۰۰",
+    "unitPrice": "قیمت واحد (میلیون/مثقال)",
+    "unitPricePlaceholder": "مثلاً ۷۲.۸ ← ۷۲,۸۰۰,۰۰۰",
+    "eachGram": "هر گرم:",
+    "approxGrams": "≈ {value} گرم با این قیمت",
+    "useCurrentDate": "استفاده از تاریخ فعلی",
+    "date": "تاریخ",
+    "submit": "ثبت تراکنش طلا"
+  },
+  "TransactionGroupsTable": {
+    "date": "تاریخ",
+    "stock": "سهم",
+    "type": "نوع",
+    "participants": "شرکت‌کنندگان",
+    "totalCount": "تعداد کل",
+    "unitPrice": "قیمت واحد",
+    "commission": "کارمزد",
+    "realPrice": "قیمت واقعی",
+    "totalCost": "هزینه کل",
+    "noTransactionsYet": "هنوز تراکنشی ثبت نشده است.",
+    "typeBuy": "خرید",
+    "typeSell": "فروش",
+    "typeCapitalIncreased": "افزایش سرمایه",
+    "typeCashExited": "برداشت نقدی",
+    "participantBreakdown": "ریز شرکت‌کنندگان",
+    "user": "کاربر",
+    "count": "تعداد",
+    "cost": "هزینه",
+    "percentOfCount": "٪ از تعداد",
+    "percentOfCost": "٪ از هزینه"
+  },
+  "UserTransactionsTable": {
+    "filterByType": "فیلتر بر اساس نوع",
+    "clear": "پاک کردن",
+    "typeBuy": "خرید",
+    "typeSell": "فروش",
+    "typeCapitalIncreased": "افزایش سرمایه",
+    "typeCashExited": "برداشت نقدی",
+    "typeBuyBadge": "خرید",
+    "typeSellBadge": "فروش",
+    "typeCapitalIncreasedBadge": "افزایش سرمایه",
+    "typeCashExitedBadge": "برداشت نقدی",
+    "date": "تاریخ",
+    "stock": "سهم",
+    "type": "نوع",
+    "count": "تعداد",
+    "unitPrice": "قیمت واحد",
+    "realPrice": "قیمت واقعی",
+    "totalCost": "هزینه کل",
+    "noTransactionsYet": "هنوز تراکنشی ثبت نشده است.",
+    "noTransactionsMatch": "هیچ تراکنشی با فیلترهای انتخاب‌شده مطابقت ندارد."
+  },
+  "Users": {
+    "eyebrow": "شرکت‌کنندگان",
+    "title": "کاربران",
+    "name": "نام",
+    "cash": "موجودی نقدی",
+    "shares": "سهام",
+    "actions": "عملیات",
+    "noUsersYet": "هنوز کاربری وجود ندارد. یکی از بالا بسازید."
+  },
+  "CreateUserForm": {
+    "name": "نام",
+    "namePlaceholder": "نام کاربر",
+    "initialCapital": "سرمایه اولیه",
+    "submit": "افزودن کاربر",
+    "initialShares": "سهام اولیه (اختیاری)"
+  },
+  "UserDetail": {
+    "eyebrow": "شرکت‌کننده",
+    "cash": "موجودی نقدی",
+    "shares": "سهام",
+    "stockSingular": "سهم",
+    "stockPlural": "سهم",
+    "increaseCapital": "افزایش سرمایه",
+    "increaseCapitalNote": "به‌عنوان تراکنش افزایش سرمایه ثبت می‌شود.",
+    "saveProfit": "برداشت سود",
+    "saveProfitNote": "به‌عنوان تراکنش برداشت نقدی ثبت می‌شود و موجودی نقدی را کاهش می‌دهد.",
+    "portfolio": "پرتفوی",
+    "stock": "سهم",
+    "count": "تعداد",
+    "noSharesHeld": "سهامی نگهداری نمی‌شود.",
+    "transactionHistory": "تاریخچه تراکنش‌ها"
+  },
+  "IncreaseCapitalForm": {
+    "amount": "مبلغ",
+    "submit": "افزودن به موجودی"
+  },
+  "ExitUserCashForm": {
+    "amount": "مبلغ",
+    "submit": "برداشت نقدی"
+  },
+  "DatePicker": {
+    "selectDate": "انتخاب تاریخ"
+  },
+  "Toast": {
+    "success": "با موفقیت انجام شد"
+  },
+  "Errors": {
+    "cannotDeleteGold": "امکان حذف «طلا» وجود ندارد",
+    "usersNotFound": "برخی از کاربران یافت نشدند",
+    "noCashUsers": "هیچ‌کدام از کاربران انتخاب‌شده موجودی نقدی برای این تراکنش ندارند.",
+    "insufficientCash": "کاربران انتخاب‌شده موجودی نقدی کافی برای این تراکنش ندارند. مجموع موجودی نقدی موجود {amount} است",
+    "noSharesUsers": "هیچ‌کدام از کاربران انتخاب‌شده سهمی از این سهم ندارند.",
+    "insufficientShares": "کاربران انتخاب‌شده سهام کافی برای فروش ندارند. مجموع سهام موجود {amount} است",
+    "amountMustBePositive": "مبلغ باید بزرگ‌تر از صفر باشد",
+    "userNotFound": "کاربر یافت نشد",
+    "insufficientCashExit": "موجودی نقدی کافی برای برداشت وجود ندارد",
+    "somethingWentWrong": "مشکلی پیش آمد. لطفاً دوباره تلاش کنید."
+  }
+}

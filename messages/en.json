@@ -1,0 +1,221 @@
+{
+  "Locale": {
+    "en": "English",
+    "fa": "Persian"
+  },
+  "Sidebar": {
+    "brand": "Portfolio Manager",
+    "groupOverview": "Overview",
+    "groupManage": "Manage",
+    "groupActivity": "Activity",
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "stocks": "Stocks",
+    "transactions": "Transactions",
+    "newTransaction": "New Transaction",
+    "newGoldTransaction": "New Gold Transaction",
+    "collapse": "Collapse",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "language": "Language"
+  },
+  "Dashboard": {
+    "eyebrow": "Overview",
+    "title": "Dashboard",
+    "totalUsers": "Total Users",
+    "stocksHeld": "Stocks Held",
+    "totalCash": "Total Cash",
+    "portfolioComposition": "Portfolio Composition",
+    "noPriceNote": "Stocks with no recorded trade yet have no known price, so they're valued at 0 here until their first transaction.",
+    "totalSharesByStock": "Total Shares by Stock",
+    "stock": "Stock",
+    "totalShares": "Total Shares",
+    "noSharesYet": "No shares held yet.",
+    "usersTitle": "Users",
+    "name": "Name",
+    "cash": "Cash",
+    "shares": "Shares",
+    "shareCount": "{count, plural, one {# stock} other {# stocks}}",
+    "noUsersYet": "No users yet.",
+    "createOne": "Create one"
+  },
+  "PortfolioPieChart": {
+    "cash": "Cash",
+    "noValue": "No portfolio value to chart yet."
+  },
+  "Stocks": {
+    "eyebrow": "Assets",
+    "title": "Stocks",
+    "name": "Name",
+    "holders": "Holders",
+    "transactions": "Transactions",
+    "actions": "Actions",
+    "noStocksYet": "No stocks yet. Create one above."
+  },
+  "CreateStockForm": {
+    "label": "Stock Name / Symbol",
+    "placeholder": "e.g. AAPL, Gold, BTC",
+    "submit": "Add Stock",
+    "nameRequired": "First enter the name"
+  },
+  "DeleteButton": {
+    "delete": "Delete"
+  },
+  "Transactions": {
+    "eyebrow": "Ledger",
+    "title": "Transaction History",
+    "noTransactionsYet": "No transactions yet.",
+    "createOne": "Create one"
+  },
+  "NewTransaction": {
+    "eyebrow": "Record entry",
+    "title": "New Transaction"
+  },
+  "NewGoldTransaction": {
+    "eyebrow": "Record entry",
+    "title": "New Gold Transaction"
+  },
+  "TransactionForm": {
+    "typeSelectRequired": "Please select a transaction type (Buy or Sell)",
+    "stock": "Stock",
+    "selectAStock": "Select a stock",
+    "buy": "Buy",
+    "sell": "Sell",
+    "totalCash": "Total Cash",
+    "totalShares": "Total Shares",
+    "participatingUsers": "Participating Users",
+    "noUsers": "No users.",
+    "createOneFirst": "Create one first",
+    "shares": "shares",
+    "cash": "cash",
+    "totalCount": "Total Count",
+    "unitPrice": "Unit Price",
+    "commission": "Commission %",
+    "useCurrentDate": "Use Current Date",
+    "date": "Date",
+    "submit": "Submit Transaction"
+  },
+  "GoldTransactionForm": {
+    "typeSelectRequired": "Please select a transaction type (Buy or Sell)",
+    "selectOneUser": "At least select one user",
+    "buy": "Buy",
+    "sell": "Sell",
+    "totalCash": "Total Cash",
+    "totalGold": "Total Gold",
+    "participatingUsers": "Participating Users",
+    "noUsers": "No users.",
+    "createOneFirst": "Create one first",
+    "gold": "gold",
+    "cash": "cash",
+    "purchasedAmount": "Purchased Amount (Million)",
+    "purchasedAmountPlaceholder": "e.g. 50 → 50,000,000",
+    "unitPrice": "Unit Price (Million/Mithqal)",
+    "unitPricePlaceholder": "e.g. 72.8 → 72,800,000",
+    "eachGram": "each gram:",
+    "approxGrams": "≈ {value} grams at this price",
+    "useCurrentDate": "Use Current Date",
+    "date": "Date",
+    "submit": "Submit Gold Transaction"
+  },
+  "TransactionGroupsTable": {
+    "date": "Date",
+    "stock": "Stock",
+    "type": "Type",
+    "participants": "Participants",
+    "totalCount": "Total Count",
+    "unitPrice": "Unit Price",
+    "commission": "Commission",
+    "realPrice": "Real Price",
+    "totalCost": "Total Cost",
+    "noTransactionsYet": "No transactions yet.",
+    "typeBuy": "BUY",
+    "typeSell": "SELL",
+    "typeCapitalIncreased": "CAPITAL +",
+    "typeCashExited": "CASH OUT",
+    "participantBreakdown": "Participant Breakdown",
+    "user": "User",
+    "count": "Count",
+    "cost": "Cost",
+    "percentOfCount": "% of Count",
+    "percentOfCost": "% of Cost"
+  },
+  "UserTransactionsTable": {
+    "filterByType": "Filter by type",
+    "clear": "Clear",
+    "typeBuy": "Buy",
+    "typeSell": "Sell",
+    "typeCapitalIncreased": "Capital Increased",
+    "typeCashExited": "Cash Exited",
+    "typeBuyBadge": "BUY",
+    "typeSellBadge": "SELL",
+    "typeCapitalIncreasedBadge": "CAPITAL +",
+    "typeCashExitedBadge": "CASH OUT",
+    "date": "Date",
+    "stock": "Stock",
+    "type": "Type",
+    "count": "Count",
+    "unitPrice": "Unit Price",
+    "realPrice": "Real Price",
+    "totalCost": "Total Cost",
+    "noTransactionsYet": "No transactions yet.",
+    "noTransactionsMatch": "No transactions match the selected filters."
+  },
+  "Users": {
+    "eyebrow": "Participants",
+    "title": "Users",
+    "name": "Name",
+    "cash": "Cash",
+    "shares": "Shares",
+    "actions": "Actions",
+    "noUsersYet": "No users yet. Create one above."
+  },
+  "CreateUserForm": {
+    "name": "Name",
+    "namePlaceholder": "User name",
+    "initialCapital": "Initial Capital",
+    "submit": "Add User",
+    "initialShares": "Initial Shares (optional)"
+  },
+  "UserDetail": {
+    "eyebrow": "Participant",
+    "cash": "Cash",
+    "shares": "Shares",
+    "stockSingular": "stock",
+    "stockPlural": "stocks",
+    "increaseCapital": "Increase Capital",
+    "increaseCapitalNote": "Logged as a capital-increased transaction.",
+    "saveProfit": "Save Profit",
+    "saveProfitNote": "Logged as a cash-exited transaction. Decreases cash on hand.",
+    "portfolio": "Portfolio",
+    "stock": "Stock",
+    "count": "Count",
+    "noSharesHeld": "No shares held.",
+    "transactionHistory": "Transaction History"
+  },
+  "IncreaseCapitalForm": {
+    "amount": "Amount",
+    "submit": "Add to Cash"
+  },
+  "ExitUserCashForm": {
+    "amount": "Amount",
+    "submit": "Exit Cash"
+  },
+  "DatePicker": {
+    "selectDate": "Select date"
+  },
+  "Toast": {
+    "success": "Done Successfully"
+  },
+  "Errors": {
+    "cannotDeleteGold": "Can not delete 'Gold'",
+    "usersNotFound": "Some users not found",
+    "noCashUsers": "None of the selected users have any cash available for this transaction.",
+    "insufficientCash": "Selected users have no sufficient cash available for this transaction. The total available cash is ${amount}",
+    "noSharesUsers": "None of the selected users hold any shares of this stock.",
+    "insufficientShares": "Selected users have no sufficient shares to sell. The total available shares are {amount}",
+    "amountMustBePositive": "Amount must be greater than 0",
+    "userNotFound": "User not found",
+    "insufficientCashExit": "Insufficient cash to exit",
+    "somethingWentWrong": "Something went wrong. Please try again."
+  }
+}

@@ -5,8 +5,10 @@ import { PriceInput } from "@/components/price/PriceInput";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import useSubmitForm from "@/hooks/useSubmitForm";
+import { useTranslations } from "next-intl";
 
 function IncreaseCapitalForm({ userId }: { userId: number }) {
+  const t = useTranslations("IncreaseCapitalForm");
   const { isPending, request: increaseUserCapital } = useSubmitForm(
     increaseUserCapitalAction,
   );
@@ -22,7 +24,7 @@ function IncreaseCapitalForm({ userId }: { userId: number }) {
     <form action={handleSubmit} className="flex gap-3 items-end">
       <div className="flex-1">
         <Label htmlFor="increase-amount" className="mb-1.5">
-          Amount
+          {t("amount")}
         </Label>
         <PriceInput
           id="increase-amount"
@@ -35,7 +37,7 @@ function IncreaseCapitalForm({ userId }: { userId: number }) {
         />
       </div>
       <Button type="submit" loading={isPending}>
-        Add to Cash
+        {t("submit")}
       </Button>
     </form>
   );

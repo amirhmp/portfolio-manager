@@ -3,10 +3,12 @@ import TransactionGroupsTable, {
   type TransactionGroupRow,
 } from "@/components/transaction-groups-table";
 import { Card } from "@/components/ui/card";
+import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 export default async function TransactionsPage() {
+  const t = await getTranslations("Transactions");
   const groups = await prisma.transactionGroup.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -36,17 +38,17 @@ export default async function TransactionsPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Ledger" title="Transaction History" />
+      <PageHeader eyebrow={t("eyebrow")} title={t("title")} />
 
       {rows.length === 0 ? (
         <Card>
           <div className="text-center py-10 text-muted-foreground">
-            No transactions yet.&nbsp;
+            {t("noTransactionsYet")}&nbsp;
             <Link
               href="/transactions/new"
               className="text-primary underline underline-offset-4"
             >
-              Create one
+              {t("createOne")}
             </Link>
             .
           </div>

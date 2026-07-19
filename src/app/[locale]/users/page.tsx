@@ -8,12 +8,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import CreateUserForm from "./create-user-form";
 import DeleteUserForm from "./delete-user-form";
 
 export default async function UsersPage() {
+  const t = await getTranslations("Users");
   const [users, stocks] = await Promise.all([
     prisma.user.findMany({
       orderBy: { createdAt: "desc" },
@@ -24,7 +26,7 @@ export default async function UsersPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Participants" title="Users" />
+      <PageHeader eyebrow={t("eyebrow")} title={t("title")} />
       <Card className="mb-6">
         <CardContent className="pt-6">
           <CreateUserForm stocks={stocks} />
@@ -35,10 +37,10 @@ export default async function UsersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead className="text-right">Cash</TableHead>
-              <TableHead className="text-right">Shares</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead className="text-right">{t("cash")}</TableHead>
+              <TableHead className="text-right">{t("shares")}</TableHead>
+              <TableHead className="text-right">{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -69,7 +71,7 @@ export default async function UsersPage() {
                   colSpan={4}
                   className="text-center py-10 text-muted-foreground"
                 >
-                  No users yet. Create one above.
+                  {t("noUsersYet")}
                 </TableCell>
               </TableRow>
             )}

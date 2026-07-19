@@ -10,10 +10,12 @@ import {
 } from "@/components/ui/table";
 import { GOLD_STOCK_ID } from "@/constants";
 import { prisma } from "@/lib/prisma";
+import { getTranslations } from "next-intl/server";
 import CreateStockForm from "./_components/create-stock-form";
 import DeleteStockButton from "./_components/delete-stock-btn";
 
 export default async function StocksPage() {
+  const t = await getTranslations("Stocks");
   const stocks = await prisma.stock.findMany({
     orderBy: { createdAt: "desc" },
     include: { _count: { select: { transactionGroups: true, shares: true } } },
@@ -21,7 +23,7 @@ export default async function StocksPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Assets" title="Stocks" />
+      <PageHeader eyebrow={t("eyebrow")} title={t("title")} />
 
       <Card className="mb-6">
         <CardContent className="pt-6">
@@ -33,10 +35,10 @@ export default async function StocksPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead className="text-right">Holders</TableHead>
-              <TableHead className="text-right">Transactions</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead className="text-right">{t("holders")}</TableHead>
+              <TableHead className="text-right">{t("transactions")}</TableHead>
+              <TableHead className="text-right">{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -62,7 +64,7 @@ export default async function StocksPage() {
                   colSpan={4}
                   className="text-center py-10 text-muted-foreground"
                 >
-                  No stocks yet. Create one above.
+                  {t("noStocksYet")}
                 </TableCell>
               </TableRow>
             )}

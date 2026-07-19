@@ -7,10 +7,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Stock, User } from "@/generated/prisma/browser";
+import { Link, useRouter } from "@/i18n/navigation";
 import useSubmitForm from "@/hooks/useSubmitForm";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PriceInput } from "./price/PriceInput";
@@ -34,6 +34,8 @@ export default function TransactionForm({
   users: UserWithShares[];
   stocks: Stock[];
 }) {
+  const t = useTranslations("TransactionForm");
+  const locale = useLocale() as "en" | "fa";
   const router = useRouter();
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [useCurrentDate, setUseCurrentDate] = useState(true);
@@ -74,7 +76,7 @@ export default function TransactionForm({
 
   async function handleSubmit(formData: FormData) {
     if (!type) {
-      toast.error("Please select a transaction type (Buy or Sell)");
+      toast.error(t("typeSelectRequired"));
       return;
     }
 
@@ -111,7 +113,7 @@ export default function TransactionForm({
         <form action={handleSubmit} className="space-y-5">
           <div>
             <Label htmlFor="stock" className="mb-1.5">
-              Stock
+              {t("stock")}
             </Label>
             <Select
               id="stock"
@@ -126,7 +128,7 @@ export default function TransactionForm({
               <SelectTrigger className="w-45">
                 <SelectValue>
                   {(value: number) =>
-                    stocks.find((s) => s.id === value)?.name ?? "Select a stock"
+                    stocks.find((s) => s.id === value)?.name ?? t("selectAStock")
                   }
                 </SelectValue>
               </SelectTrigger>
@@ -163,11 +165,11 @@ export default function TransactionForm({
               >
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="buy" id="type-buy" />
-                  <span className="text-sm font-medium text-primary">Buy</span>
+                  <span className="text-sm font-medium text-primary">{t("buy")}</span>
                 </div>
                 <div>
                   <p className="font-mono text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
-                    Total Cash
+                    {t("totalCash")}
                   </p>
                   <p className="font-serif text-2xl font-semibold tabular-nums text-foreground">
                     {totalCash.toLocaleString()}
@@ -187,12 +189,12 @@ export default function TransactionForm({
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="sell" id="type-sell" />
                   <span className="text-sm font-medium text-destructive">
-                    Sell
+                    {t("sell")}
                   </span>
                 </div>
                 <div>
                   <p className="font-mono text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
-                    Total Shares
+                    {t("totalShares")}
                     {selectedStock ? ` (${selectedStock.name})` : ""}
                   </p>
                   <p className="font-serif text-2xl font-semibold tabular-nums text-primary">
@@ -206,7 +208,7 @@ export default function TransactionForm({
           </div>
 
           <div>
-            <Label className="mb-2">Participating Users</Label>
+            <Label className="mb-2">{t("participatingUsers")}</Label>
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
               {users.map((user) => {
                 const eligible = !type || isEligible(user);
@@ -243,7 +245,7 @@ export default function TransactionForm({
                         {user.name}
                       </span>
                       <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                        {showShares ? "shares" : "cash"}:{" "}
+                        {showShares ? t("shares") : t("cash")}:{" "}
                         {metric.toLocaleString()}
                       </span>
                     </div>
@@ -252,12 +254,12 @@ export default function TransactionForm({
               })}
               {users.length === 0 && (
                 <p className="col-span-full text-muted-foreground text-sm">
-                  No users.&nbsp;
+                  {t("noUsers")}&nbsp;
                   <Link
                     href="/users"
                     className="text-primary underline underline-offset-4"
                   >
-                    Create one first
+                    {t("createOneFirst")}
                   </Link>
                   .
                 </p>
@@ -268,7 +270,7 @@ export default function TransactionForm({
           <div className="grid grid-cols-3 gap-3">
             <div>
               <Label htmlFor="count" className="mb-1.5">
-                Total Count
+                {t("totalCount")}
               </Label>
               <PriceInput
                 id="count"
@@ -283,7 +285,7 @@ export default function TransactionForm({
             </div>
             <div>
               <Label htmlFor="unitPrice" className="mb-1.5">
-                Unit Price
+                {t("unitPrice")}
               </Label>
               <PriceInput
                 id="unitPrice"
@@ -298,7 +300,7 @@ export default function TransactionForm({
             </div>
             <div>
               <Label htmlFor="commission" className="mb-1.5">
-                Commission %
+                {t("commission")}
               </Label>
               <PriceInput
                 id="commission"
@@ -321,15 +323,15 @@ export default function TransactionForm({
                   onCheckedChange={setUseCurrentDate}
                 />
               </span>
-              <span>{useCurrentDate ? "Use Current Date" : "Date"}</span>
+              <span>{useCurrentDate ? t("useCurrentDate") : t("date")}</span>
             </Label>
             {!useCurrentDate && (
-              <DatePicker locale="en" defaultValue={new Date()} name="date" />
+              <DatePicker locale={locale} defaultValue={new Date()} name="date" />
             )}
           </div>
 
           <Button type="submit" loading={isPending} className="w-full">
-            Submit Transaction
+            {t("submit")}
           </Button>
         </form>
       </CardContent>

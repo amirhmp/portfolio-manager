@@ -1,5 +1,6 @@
 "use client";
 import type { ActionResult } from "@/lib/with-action-error-handling";
+import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
 
@@ -11,6 +12,7 @@ export default function useSubmitForm<Args extends unknown[], T>(
     successMsg?: string;
   },
 ) {
+  const t = useTranslations("Toast");
   const { hideErrorToast, hideSuccessToast, successMsg } = options ?? {};
   const [isPending, startTransition] = useTransition();
   const request = (...args: Args): Promise<ActionResult<T>> => {
@@ -19,7 +21,7 @@ export default function useSubmitForm<Args extends unknown[], T>(
         const result = await fn(...args);
         if (result.success) {
           if (!hideSuccessToast)
-            toast.success(successMsg || "Done Successfully");
+            toast.success(successMsg || t("success"));
         } else {
           if (!hideErrorToast) toast.error(result.message);
         }

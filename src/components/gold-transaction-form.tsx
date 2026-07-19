@@ -8,10 +8,10 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { GOLD_STOCK_ID, MILLION, MITHQAL_FACTOR } from "@/constants";
 import type { User } from "@/generated/prisma/browser";
+import { Link, useRouter } from "@/i18n/navigation";
 import useSubmitForm from "@/hooks/useSubmitForm";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PriceInput } from "./price/PriceInput";
@@ -26,6 +26,8 @@ export default function GoldTransactionForm({
 }: {
   users: UserWithShares[];
 }) {
+  const t = useTranslations("GoldTransactionForm");
+  const locale = useLocale() as "en" | "fa";
   const router = useRouter();
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [type, setType] = useState<"buy" | "sell" | undefined>(undefined);
@@ -77,7 +79,7 @@ export default function GoldTransactionForm({
 
   async function handleSubmit(formData: FormData) {
     if (!type) {
-      toast.error("Please select a transaction type (Buy or Sell)");
+      toast.error(t("typeSelectRequired"));
       return;
     }
 
@@ -87,7 +89,7 @@ export default function GoldTransactionForm({
     );
 
     if (selectedUsers.length === 0) {
-      toast.error("At least select one user");
+      toast.error(t("selectOneUser"));
       return;
     }
 
@@ -135,11 +137,11 @@ export default function GoldTransactionForm({
               >
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="buy" id="gold-type-buy" />
-                  <span className="text-sm font-medium text-primary">Buy</span>
+                  <span className="text-sm font-medium text-primary">{t("buy")}</span>
                 </div>
                 <div>
                   <p className="font-mono text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
-                    Total Cash
+                    {t("totalCash")}
                   </p>
                   <p className="font-serif text-2xl font-semibold tabular-nums text-foreground">
                     {totalCash.toLocaleString()}
@@ -159,12 +161,12 @@ export default function GoldTransactionForm({
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="sell" id="gold-type-sell" />
                   <span className="text-sm font-medium text-destructive">
-                    Sell
+                    {t("sell")}
                   </span>
                 </div>
                 <div>
                   <p className="font-mono text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
-                    Total Gold
+                    {t("totalGold")}
                   </p>
                   <p className="font-serif text-2xl font-semibold tabular-nums text-primary">
                     {totalGoldShares.toLocaleString()}
@@ -175,7 +177,7 @@ export default function GoldTransactionForm({
           </div>
 
           <div>
-            <Label className="mb-2">Participating Users</Label>
+            <Label className="mb-2">{t("participatingUsers")}</Label>
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
               {users.map((user) => {
                 const eligible = !type || isEligible(user);
@@ -210,7 +212,7 @@ export default function GoldTransactionForm({
                         {user.name}
                       </span>
                       <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                        {showShares ? "gold" : "cash"}:{" "}
+                        {showShares ? t("gold") : t("cash")}:{" "}
                         {metric.toLocaleString()}
                       </span>
                     </div>
@@ -219,12 +221,12 @@ export default function GoldTransactionForm({
               })}
               {users.length === 0 && (
                 <p className="col-span-full text-muted-foreground text-sm">
-                  No users.
+                  {t("noUsers")}
                   <Link
                     href="/users"
                     className="text-primary underline underline-offset-4"
                   >
-                    &nbsp;Create one first
+                    &nbsp;{t("createOneFirst")}
                   </Link>
                   .
                 </p>
@@ -235,7 +237,7 @@ export default function GoldTransactionForm({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="amount" className="mb-1.5">
-                Purchased Amount (Million)
+                {t("purchasedAmount")}
               </Label>
               <PriceInput
                 id="amount"
@@ -243,7 +245,7 @@ export default function GoldTransactionForm({
                 required
                 min={0}
                 step="any"
-                placeholder="e.g. 50 → 50,000,000"
+                placeholder={t("purchasedAmountPlaceholder")}
                 value={purchasedAmount}
                 onChange={setAmount}
                 className="font-mono tabular-nums"
@@ -256,7 +258,7 @@ export default function GoldTransactionForm({
             </div>
             <div>
               <Label htmlFor="unitPrice" className="mb-1.5">
-                Unit Price (Million/Mithqal)
+                {t("unitPrice")}
               </Label>
               <PriceInput
                 id="unitPrice"
@@ -265,13 +267,13 @@ export default function GoldTransactionForm({
                 min={0}
                 maxFractions={3}
                 step="any"
-                placeholder="e.g. 72.8 → 72,800,000"
+                placeholder={t("unitPricePlaceholder")}
                 value={mithqalPrice}
                 onChange={setMithqalPrice}
                 className="font-mono tabular-nums"
               />
               <p className="mt-1 text-[0.65rem] text-muted-foreground">
-                each gram:&nbsp;
+                {t("eachGram")}&nbsp;
                 {gramPrice ? (
                   <PriceLabel
                     className="text-xs font-semibold"
@@ -290,13 +292,12 @@ export default function GoldTransactionForm({
               !purchasedWeight && "invisible",
             )}
           >
-            ≈&nbsp;
-            <span className="font-mono tabular-nums text-foreground">
-              {purchasedWeight?.toLocaleString(undefined, {
-                maximumFractionDigits: 4,
-              })}
-            </span>
-            &nbsp;grams at this price
+            {t("approxGrams", {
+              value:
+                purchasedWeight?.toLocaleString(locale, {
+                  maximumFractionDigits: 4,
+                }) ?? "",
+            })}
           </p>
 
           <div>
@@ -308,15 +309,15 @@ export default function GoldTransactionForm({
                   onCheckedChange={setUseCurrentDate}
                 />
               </span>
-              <span>{useCurrentDate ? "Use Current Date" : "Date"}</span>
+              <span>{useCurrentDate ? t("useCurrentDate") : t("date")}</span>
             </Label>
             {!useCurrentDate && (
-              <DatePicker locale="en" defaultValue={new Date()} name="date" />
+              <DatePicker locale={locale} defaultValue={new Date()} name="date" />
             )}
           </div>
 
           <Button type="submit" className="w-full" loading={isPending}>
-            Submit Gold Transaction
+            {t("submit")}
           </Button>
         </form>
       </CardContent>
