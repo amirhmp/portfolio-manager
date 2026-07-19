@@ -3,6 +3,8 @@
 import { cn } from "@/lib/utils";
 import {
   ArrowLeftRight,
+  ChevronsLeft,
+  ChevronsRight,
   Gem,
   LayoutDashboard,
   PlusCircle,
@@ -11,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const groups = [
   {
@@ -38,29 +41,64 @@ const groups = [
   },
 ];
 
+const COLLAPSE_STORAGE_KEY = "sidebar-collapsed";
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
+    if (stored === "1") setCollapsed(true);
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      window.localStorage.setItem(COLLAPSE_STORAGE_KEY, next ? "1" : "0");
+      return next;
+    });
+  }
 
   return (
-    <aside className="w-64 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
-      <div className="px-5 pt-7 pb-6">
-        <div className="flex items-center gap-2.5">
-          <span className="flex size-7 items-center justify-center rounded-md border border-primary/30 bg-primary/10">
+    <aside
+      className={cn(
+        "shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border transition-[width] duration-150",
+        collapsed ? "w-16" : "w-64",
+      )}
+    >
+      <div className={cn("pt-7 pb-6", collapsed ? "px-3" : "px-5")}>
+        <div
+          className={cn(
+            "flex items-center gap-2.5",
+            collapsed && "justify-center",
+          )}
+        >
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-primary/30 bg-primary/10">
             <Gem className="size-3.5 text-primary" strokeWidth={1.75} />
           </span>
-          <span className="font-serif text-[1.05rem] font-medium tracking-tight text-foreground">
-            Portfolio Manager
-          </span>
+          {!collapsed && (
+            <span className="font-serif text-[1.05rem] font-medium tracking-tight text-foreground">
+              Portfolio Manager
+            </span>
+          )}
         </div>
         <div className="mt-4 ledger-rule" />
       </div>
 
-      <nav className="flex-1 px-3 space-y-6 overflow-y-auto pb-6">
+      <nav
+        className={cn(
+          "flex-1 space-y-6 overflow-y-auto pb-6",
+          collapsed ? "px-2" : "px-3",
+        )}
+      >
         {groups.map((group) => (
           <div key={group.label}>
-            <p className="px-3 pb-1.5 font-mono text-[0.65rem] font-medium uppercase tracking-[0.14em] text-sidebar-foreground/40">
-              {group.label}
-            </p>
+            {!collapsed && (
+              <p className="px-3 pb-1.5 font-mono text-[0.65rem] font-medium uppercase tracking-[0.14em] text-sidebar-foreground/40">
+                {group.label}
+              </p>
+            )}
             <div className="space-y-0.5">
               {group.links.map((link) => {
                 const active = pathname === link.href;
@@ -69,8 +107,10 @@ export default function Sidebar() {
                   <Link
                     key={link.href}
                     href={link.href}
+                    title={collapsed ? link.label : undefined}
                     className={cn(
                       "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      collapsed && "justify-center px-0",
                       active
                         ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_0_var(--sidebar-primary)]"
                         : "text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
@@ -83,7 +123,7 @@ export default function Sidebar() {
                       )}
                       strokeWidth={1.75}
                     />
-                    {link.label}
+                    {!collapsed && link.label}
                   </Link>
                 );
               })}
@@ -91,6 +131,32 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
+
+      <div
+        className={cn(
+          "border-t border-sidebar-border py-3",
+          collapsed ? "px-2" : "px-3",
+        )}
+      >
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+            collapsed && "justify-center px-0",
+          )}
+        >
+          {collapsed ? (
+            <ChevronsRight className="size-4 shrink-0" strokeWidth={1.75} />
+          ) : (
+            <>
+              <ChevronsLeft className="size-4 shrink-0" strokeWidth={1.75} />
+              Collapse
+            </>
+          )}
+        </button>
+      </div>
     </aside>
   );
 }
