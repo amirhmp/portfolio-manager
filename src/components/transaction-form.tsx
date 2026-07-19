@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PriceInput } from "./price/PriceInput";
+import DatePicker from "./ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import Switch from "./ui/switch";
 
 type UserWithShares = User & { shares: { stockId: number; count: number }[] };
 
@@ -34,6 +36,7 @@ export default function TransactionForm({
 }) {
   const router = useRouter();
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  const [useCurrentDate, setUseCurrentDate] = useState(true);
   const [type, setType] = useState<"buy" | "sell" | undefined>(undefined);
   const [stockId, setStockId] = useState<number | null>(null);
   const { isPending, request: createTransaction } = useSubmitForm(
@@ -77,12 +80,18 @@ export default function TransactionForm({
 
     const stockIdValue = parseInt(formData.get("stock") as string);
     const count = parseFloat(formData.get("count") as string);
+    const date = formData.get("date")?.toString();
     const unitPrice = parseFloat(formData.get("unitPrice") as string);
     const commission = parseFloat(
       (formData.get("commission") as string) || "0",
     );
 
-    if (selectedUsers.length > 0 && stockIdValue && count > 0 && unitPrice > 0) {
+    if (
+      selectedUsers.length > 0 &&
+      stockIdValue &&
+      count > 0 &&
+      unitPrice > 0
+    ) {
       const result = await createTransaction(
         selectedUsers,
         stockIdValue,
@@ -90,6 +99,7 @@ export default function TransactionForm({
         type,
         unitPrice,
         commission,
+        date,
       );
       if (result.success) router.push("/transactions");
     }
@@ -133,13 +143,6 @@ export default function TransactionForm({
           </div>
 
           <div>
-            <Label className="mb-2">Type</Label>
-            {/* The RadioGroup is always given a defined string ("" while
-                unset) so it stays controlled from the first render --
-                handing it `undefined` causes it to start uncontrolled and
-                then flip to controlled on the first click, which throws.
-                Each RadioGroupItem is embedded in its own full card, so the
-                card itself IS the radio option. */}
             <RadioGroup
               value={type ?? ""}
               onValueChange={(value) => {
@@ -189,10 +192,13 @@ export default function TransactionForm({
                 </div>
                 <div>
                   <p className="font-mono text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
-                    Total Shares{selectedStock ? ` (${selectedStock.name})` : ""}
+                    Total Shares
+                    {selectedStock ? ` (${selectedStock.name})` : ""}
                   </p>
                   <p className="font-serif text-2xl font-semibold tabular-nums text-primary">
-                    {stockId != null ? totalSharesForStock.toLocaleString() : "—"}
+                    {stockId != null
+                      ? totalSharesForStock.toLocaleString()
+                      : "—"}
                   </p>
                 </div>
               </Label>
@@ -237,7 +243,8 @@ export default function TransactionForm({
                         {user.name}
                       </span>
                       <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                        {showShares ? "shares" : "cash"}: {metric.toLocaleString()}
+                        {showShares ? "shares" : "cash"}:{" "}
+                        {metric.toLocaleString()}
                       </span>
                     </div>
                   </Label>
@@ -303,6 +310,22 @@ export default function TransactionForm({
                 className="font-mono tabular-nums"
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="stock" className="mb-1.5">
+              <span>
+                <Switch
+                  checked={useCurrentDate}
+                  size="sm"
+                  onCheckedChange={setUseCurrentDate}
+                />
+              </span>
+              <span>{useCurrentDate ? "Use Current Date" : "Date"}</span>
+            </Label>
+            {!useCurrentDate && (
+              <DatePicker locale="en" defaultValue={new Date()} name="date" />
+            )}
           </div>
 
           <Button type="submit" loading={isPending} className="w-full">

@@ -16,6 +16,8 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PriceInput } from "./price/PriceInput";
 import { PriceLabel } from "./price/PriceLabel";
+import DatePicker from "./ui/date-picker";
+import Switch from "./ui/switch";
 
 type UserWithShares = User & { shares: { stockId: number; count: number }[] };
 
@@ -29,6 +31,7 @@ export default function GoldTransactionForm({
   const [type, setType] = useState<"buy" | "sell" | undefined>(undefined);
   const [purchasedAmount, setAmount] = useState<number | null>(null);
   const [mithqalPrice, setMithqalPrice] = useState<number | null>(null);
+  const [useCurrentDate, setUseCurrentDate] = useState(true);
   const { isPending, request: createGoldTransaction } = useSubmitForm(
     createGoldTransactionAction,
   );
@@ -88,12 +91,15 @@ export default function GoldTransactionForm({
       return;
     }
 
+    const date = formData.get("date")?.toString();
+
     if (amountInMillions > 0 && mithqalPriceInMillions > 0) {
       const result = await createGoldTransaction(
         selectedUsers,
         amountInMillions,
         type,
         mithqalPriceInMillions,
+        date,
       );
       if (result.success) router.push("/transactions");
     }
@@ -292,6 +298,22 @@ export default function GoldTransactionForm({
             </span>
             &nbsp;grams at this price
           </p>
+
+          <div>
+            <Label htmlFor="stock" className="mb-1.5">
+              <span>
+                <Switch
+                  checked={useCurrentDate}
+                  size="sm"
+                  onCheckedChange={setUseCurrentDate}
+                />
+              </span>
+              <span>{useCurrentDate ? "Use Current Date" : "Date"}</span>
+            </Label>
+            {!useCurrentDate && (
+              <DatePicker locale="en" defaultValue={new Date()} name="date" />
+            )}
+          </div>
 
           <Button type="submit" className="w-full" loading={isPending}>
             Submit Gold Transaction

@@ -51,6 +51,7 @@ export async function submitTransaction(
   type: TradeType,
   unitPrice: number,
   commission: number = 0,
+  date?: Date,
 ) {
   const realPrice = getRealPrice(unitPrice, commission, type);
   const totalCost = realPrice * count;
@@ -88,6 +89,7 @@ export async function submitTransaction(
           unitPrice,
           commission,
           totalCost,
+          createdAt: date,
         },
       });
 
@@ -145,7 +147,9 @@ export async function submitTransaction(
 
       const totalShares = shares.reduce((sum, s) => sum + s.count, 0);
       if (totalShares <= count) {
-        throw new AppError(`Selected users have no sufficient shares to sell. The total available shares are ${totalShares}`);
+        throw new AppError(
+          `Selected users have no sufficient shares to sell. The total available shares are ${totalShares}`,
+        );
       }
 
       const group = await tx.transactionGroup.create({
@@ -156,6 +160,7 @@ export async function submitTransaction(
           unitPrice,
           commission,
           totalCost,
+          createdAt: date,
         },
       });
 

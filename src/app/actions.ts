@@ -90,6 +90,7 @@ export const createTransaction = withErrorHandling(
     type: TradeType,
     unitPrice: number,
     commission: number = 0,
+    date?: string,
   ) => {
     await submitTransaction(
       userIds,
@@ -98,6 +99,7 @@ export const createTransaction = withErrorHandling(
       type,
       unitPrice,
       commission,
+      date ? new Date(date) : undefined,
     );
     revalidatePath("/transactions");
     revalidatePath("/users");
@@ -118,11 +120,20 @@ export const createGoldTransaction = withErrorHandling(
     purchasedAmountInMillions: number,
     type: TradeType,
     mithqalPriceInMillions: number,
+    date?: string,
   ) => {
     const grams =
       (MITHQAL_FACTOR * purchasedAmountInMillions) / mithqalPriceInMillions;
     const gramPrice = (mithqalPriceInMillions * MILLION) / MITHQAL_FACTOR;
-    await submitTransaction(userIds, GOLD_STOCK_ID, grams, type, gramPrice, 0);
+    await submitTransaction(
+      userIds,
+      GOLD_STOCK_ID,
+      grams,
+      type,
+      gramPrice,
+      0,
+      date ? new Date(date) : undefined,
+    );
     revalidatePath("/transactions");
     revalidatePath("/users");
     revalidatePath("/");
