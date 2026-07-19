@@ -28,7 +28,7 @@ export default async function Dashboard() {
     // stock's last traded unitPrice is the best available valuation basis.
     prisma.transactionGroup.findMany({
       where: { stockId: { not: null }, unitPrice: { not: null } },
-      orderBy: { createdAt: "desc" },
+      orderBy: { dealDate: "desc" },
       select: { stockId: true, unitPrice: true },
     }),
   ]);

@@ -1,8 +1,8 @@
 import PageHeader from "@/components/page-header";
-import { Card } from "@/components/ui/card";
 import TransactionGroupsTable, {
   type TransactionGroupRow,
 } from "@/components/transaction-groups-table";
+import { Card } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
@@ -23,6 +23,7 @@ export default async function TransactionsPage() {
     commission: group.commission,
     totalCost: group.totalCost,
     createdAt: group.createdAt,
+    dealDate: group.dealDate,
     stock: group.stock ? { name: group.stock.name } : null,
     participants: group.transactions.map((tx) => ({
       id: tx.id,

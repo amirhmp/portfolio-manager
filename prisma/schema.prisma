@@ -48,6 +48,7 @@ model TransactionGroup {
   unitPrice    Float? // null for capital-increased / cash-exited
   commission   Float? // percent, e.g. 0.25. null for capital-increased / cash-exited
   totalCost    Float // total cost/revenue/amount for the whole group
+  dealDate     DateTime      @default(now())
   createdAt    DateTime      @default(now())
   stock        Stock?        @relation(fields: [stockId], references: [id])
   transactions Transaction[]
@@ -60,7 +61,6 @@ model Transaction {
   transactionGroupId Int
   count              Float // this user's portion of the group's total count
   totalCost          Float // this user's portion of the group's total cost
-  createdAt          DateTime         @default(now())
   user               User             @relation(fields: [userId], references: [id])
   transactionGroup   TransactionGroup @relation(fields: [transactionGroupId], references: [id], onDelete: Cascade)
 }

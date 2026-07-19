@@ -51,7 +51,7 @@ export async function submitTransaction(
   type: TradeType,
   unitPrice: number,
   commission: number = 0,
-  date?: Date,
+  dealDate?: Date,
 ) {
   const realPrice = getRealPrice(unitPrice, commission, type);
   const totalCost = realPrice * count;
@@ -89,7 +89,7 @@ export async function submitTransaction(
           unitPrice,
           commission,
           totalCost,
-          createdAt: date,
+          dealDate,
         },
       });
 
@@ -160,7 +160,7 @@ export async function submitTransaction(
           unitPrice,
           commission,
           totalCost,
-          createdAt: date,
+          dealDate,
         },
       });
 

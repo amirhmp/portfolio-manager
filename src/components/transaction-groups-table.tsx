@@ -34,7 +34,7 @@ export type TransactionGroupRow = {
   unitPrice: number | null;
   commission: number | null;
   totalCost: number;
-  createdAt: Date | string;
+  dealDate: Date | string;
   stock: { name: string } | null;
   participants: TransactionGroupParticipant[];
 };
@@ -99,7 +99,7 @@ export default function TransactionGroupsTable({
                 className="cursor-pointer"
               >
                 <TableCell className="text-muted-foreground">
-                  {new Date(group.createdAt).toLocaleDateString()}
+                  {new Date(group.dealDate).toLocaleDateString()}
                 </TableCell>
                 <TableCell className="font-medium">
                   {group.stock?.name ?? "—"}
@@ -159,7 +159,7 @@ export default function TransactionGroupsTable({
                     : typeLabel[selected.type] ?? selected.type.toUpperCase()}
                 </DialogTitle>
                 <DialogDescription>
-                  {new Date(selected.createdAt).toLocaleString()}
+                  {new Date(selected.dealDate).toLocaleString()}
                 </DialogDescription>
               </DialogHeader>
 
