@@ -1,50 +1,27 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { THEME_COOKIE_KEY } from "@/constants";
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import SettingsDialog from "@/components/settings-dialog";
+import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeftRight,
   ChevronsLeft,
   ChevronsRight,
   Gem,
-  Languages,
   LayoutDashboard,
-  Moon,
   PlusCircle,
   Sparkles,
-  Sun,
   Users,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
-import Switch from "./ui/switch";
 
 const COLLAPSE_STORAGE_KEY = "sidebar-collapsed";
-const LOCALES = ["en", "fa"] as const;
 
-export default function Sidebar({
-  theme: initialTheme,
-}: {
-  theme: "light" | "dark";
-}) {
+export default function Sidebar() {
   const t = useTranslations("Sidebar");
-  const locale = useLocale();
   const pathname = usePathname();
-  const params = useParams();
-  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">(initialTheme);
 
   const groups = [
     {
@@ -82,6 +59,7 @@ export default function Sidebar({
 
   useEffect(() => {
     const stored = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (stored === "1") setCollapsed(true);
   }, []);
 
@@ -91,27 +69,6 @@ export default function Sidebar({
       window.localStorage.setItem(COLLAPSE_STORAGE_KEY, next ? "1" : "0");
       return next;
     });
-  }
-
-  function toggleTheme() {
-    setTheme((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
-      // Flip the class immediately for instant feedback in this tab; the
-      // cookie is what makes the *next* server render (this tab's next
-      // navigation, or a fresh visit) come back with the right theme
-      // already applied, no client-side correction needed.
-      document.documentElement.classList.toggle("dark", next === "dark");
-      document.cookie = `${THEME_COOKIE_KEY}=${next}; path=/; max-age=31536000; SameSite=Lax`;
-      return next;
-    });
-  }
-
-  function switchLocale(nextLocale: string) {
-    router.replace(
-      // @ts-expect-error -- pathname/params are dynamic across routes
-      { pathname, params },
-      { locale: nextLocale },
-    );
   }
 
   return (
@@ -192,77 +149,16 @@ export default function Sidebar({
           collapsed ? "px-2" : "px-3",
         )}
       >
-        {!collapsed && (
-          <div className="mb-1 flex items-center justify-between gap-2 px-3 py-1.5">
-            <span className="flex items-center gap-2">
-              {theme === "dark" ? (
-                <Moon
-                  className="size-4 shrink-0 text-sidebar-foreground/40"
-                  strokeWidth={1.75}
-                />
-              ) : (
-                <Sun
-                  className="size-4 shrink-0 text-sidebar-foreground/40"
-                  strokeWidth={1.75}
-                />
-              )}
-              <span className="text-sm font-medium text-sidebar-foreground/70">
-                {t("theme")}
-              </span>
-            </span>
-            <Switch
-              checked={theme === "dark"}
-              onCheckedChange={toggleTheme}
-              aria-label={t("theme")}
-            />
-          </div>
-        )}
-
-        {!collapsed && (
-          <div className="mb-1 flex items-center gap-2 px-3 py-1.5">
-            <Languages
-              className="size-4 shrink-0 text-sidebar-foreground/40"
-              strokeWidth={1.75}
-            />
-
-            <Select
-              id="stock"
-              name="stock"
-              required
-              onValueChange={(value) => {
-                switchLocale(value!);
-              }}
-              aria-label={t("language")}
-              value={locale}
-            >
-              <SelectTrigger className="w-45">
-                <SelectValue>
-                  {(value) =>
-                    LOCALES[LOCALES.indexOf(value)] === "en"
-                      ? "English"
-                      : "فارسی"
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {LOCALES.map((l) => (
-                    <SelectItem key={l} value={l}>
-                      {l === "en" ? "English" : "فارسی"}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="mb-1">
+          <SettingsDialog collapsed={collapsed} />
+        </div>
 
         <button
           type="button"
           onClick={toggleCollapsed}
           title={collapsed ? t("expandSidebar") : t("collapseSidebar")}
           className={cn(
-            "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+            "cursor-pointer flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
             collapsed && "justify-center px-0",
           )}
         >

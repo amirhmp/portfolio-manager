@@ -12,6 +12,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { PriceLabel } from "@/components/price/PriceLabel";
 import useSubmitForm from "@/hooks/useSubmitForm";
 import { useLocale, useTranslations } from "next-intl";
 import { Undo2 } from "lucide-react";
@@ -37,6 +38,7 @@ export default function UndoLastTransactionButton({
   const { isPending, request: undoLastTransaction } = useSubmitForm(
     undoLastTransactionAction,
   );
+  const isTrade = group.type === "buy" || group.type === "sell";
 
   async function handleConfirm() {
     const result = await undoLastTransaction();
@@ -84,7 +86,7 @@ export default function UndoLastTransactionButton({
               {t("summaryCount")}
             </p>
             <p className="font-mono text-base font-medium tabular-nums text-foreground">
-              {group.count.toLocaleString()}
+              {isTrade ? group.count.toLocaleString() : <PriceLabel value={group.count} />}
             </p>
           </div>
           <div>
@@ -92,7 +94,7 @@ export default function UndoLastTransactionButton({
               {t("summaryTotal")}
             </p>
             <p className="font-mono text-base font-medium tabular-nums text-primary">
-              {group.totalCost.toLocaleString()}
+              <PriceLabel value={group.totalCost} />
             </p>
           </div>
         </div>

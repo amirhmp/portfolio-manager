@@ -18,7 +18,8 @@
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
     "theme": "Theme",
-    "language": "Language"
+    "language": "Language",
+    "settings": "Settings"
   },
   "Dashboard": {
     "eyebrow": "Overview",
@@ -246,5 +247,15 @@
     "willExit": "will exit",
     "noUsers": "No users yet.",
     "note": "Total withdrawn from the pool:"
+  },
+  "SettingsDialog": {
+    "title": "Settings",
+    "description": "Personalize how the app looks and how numbers are displayed.",
+    "displayScaleTitle": "Display Scale",
+    "displayScaleDescription": "Shorten large numbers by dividing every price by this factor -- e.g. a factor of 1,000,000 shows 50,000,000 as 50 M. This only changes how numbers are shown, never what's stored.",
+    "presetNone": "None",
+    "presetThousands": "Thousands",
+    "presetMillions": "Millions",
+    "examplePreview": "Preview"
   }
 }

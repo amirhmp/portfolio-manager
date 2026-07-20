@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getRealPrice } from "@/lib/pricing";
+import { PriceLabel } from "./price/PriceLabel";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
@@ -146,16 +147,16 @@ export default function UserTransactionsTable({
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
-                  {tx.count.toLocaleString()}
+                  {isTrade ? tx.count.toLocaleString() : <PriceLabel value={tx.count} />}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
-                  {isTrade ? group.unitPrice?.toLocaleString() : "—"}
+                  {isTrade ? <PriceLabel value={group.unitPrice} /> : "—"}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
-                  {realPrice != null ? realPrice.toLocaleString() : "—"}
+                  {realPrice != null ? <PriceLabel value={realPrice} /> : "—"}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums font-medium">
-                  {tx.totalCost.toLocaleString()}
+                  <PriceLabel value={tx.totalCost} />
                 </TableCell>
               </TableRow>
             );

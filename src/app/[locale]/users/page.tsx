@@ -1,4 +1,5 @@
 import PageHeader from "@/components/page-header";
+import { PriceLabel } from "@/components/price/PriceLabel";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -55,7 +56,7 @@ export default async function UsersPage() {
                   </Link>
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
-                  {user.cash.toLocaleString()}
+                  <PriceLabel value={user.cash} />
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
                   {user.shares.length}

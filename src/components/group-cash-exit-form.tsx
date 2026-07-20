@@ -19,14 +19,10 @@ export default function GroupCashExitForm({
 }) {
   const t = useTranslations("GroupCashExitForm");
   const [amount, setAmount] = useState<number | null>(null);
-  const { isPending, request: exitGroupCash } = useSubmitForm(
-    exitGroupCashAction,
-  );
+  const { isPending, request: exitGroupCash } =
+    useSubmitForm(exitGroupCashAction);
 
-  const eligibleUsers = useMemo(
-    () => users.filter((u) => u.cash > 0),
-    [users],
-  );
+  const eligibleUsers = useMemo(() => users.filter((u) => u.cash > 0), [users]);
   const totalCash = useMemo(
     () => eligibleUsers.reduce((sum, u) => sum + u.cash, 0),
     [eligibleUsers],
@@ -75,7 +71,9 @@ export default function GroupCashExitForm({
       <div className="space-y-2 rounded-md border border-border bg-background/40 p-3">
         <div className="flex items-center justify-between font-mono text-[0.65rem] uppercase tracking-wide text-muted-foreground">
           <span>{t("perUserShare")}</span>
-          <span>{t("totalCashLabel")}: {totalCash.toLocaleString()}</span>
+          <span>
+            {t("totalCashLabel")}: <PriceLabel value={totalCash} />
+          </span>
         </div>
         {users.map((user) => {
           const eligible = user.cash > 0;
@@ -96,10 +94,10 @@ export default function GroupCashExitForm({
               <span className="font-medium">{user.name}</span>
               <span className="flex gap-3 font-mono tabular-nums text-muted-foreground">
                 <span>
-                  {t("cash")}: {user.cash.toLocaleString()}
+                  {t("cash")}: <PriceLabel value={user.cash} />
                 </span>
                 <span className="text-foreground">
-                  {t("willExit")}: {share.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  {t("willExit")}: <PriceLabel value={share} maxFractions={2} />
                 </span>
               </span>
             </div>

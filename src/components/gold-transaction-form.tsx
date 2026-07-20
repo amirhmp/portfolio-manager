@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { GOLD_STOCK_ID, MILLION, MITHQAL_FACTOR } from "@/constants";
 import type { User } from "@/generated/prisma/browser";
-import { Link, useRouter } from "@/i18n/navigation";
 import useSubmitForm from "@/hooks/useSubmitForm";
+import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -137,14 +137,16 @@ export default function GoldTransactionForm({
               >
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="buy" id="gold-type-buy" />
-                  <span className="text-sm font-medium text-primary">{t("buy")}</span>
+                  <span className="text-sm font-medium text-primary">
+                    {t("buy")}
+                  </span>
                 </div>
                 <div>
                   <p className="font-mono text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
                     {t("totalCash")}
                   </p>
                   <p className="font-serif text-2xl font-semibold tabular-nums text-foreground">
-                    {totalCash.toLocaleString()}
+                    <PriceLabel value={totalCash} />
                   </p>
                 </div>
               </Label>
@@ -213,7 +215,11 @@ export default function GoldTransactionForm({
                       </span>
                       <span className="font-mono text-xs tabular-nums text-muted-foreground">
                         {showShares ? t("gold") : t("cash")}:{" "}
-                        {metric.toLocaleString()}
+                        {showShares ? (
+                          metric.toLocaleString()
+                        ) : (
+                          <PriceLabel value={metric} />
+                        )}
                       </span>
                     </div>
                   </Label>
@@ -253,7 +259,7 @@ export default function GoldTransactionForm({
               />
               {purchasedAmount && (
                 <p className="mt-1 text-[0.65rem] text-muted-foreground">
-                  <PriceLabel value={Number(purchasedAmount) * MILLION} />
+                  <PriceLabel raw value={Number(purchasedAmount) * MILLION} />
                 </p>
               )}
             </div>
@@ -277,6 +283,7 @@ export default function GoldTransactionForm({
                 {t("eachGram")}&nbsp;
                 {gramPrice ? (
                   <PriceLabel
+                    raw
                     className="text-xs font-semibold"
                     value={gramPrice}
                   />
@@ -313,7 +320,11 @@ export default function GoldTransactionForm({
               <span>{useCurrentDate ? t("useCurrentDate") : t("date")}</span>
             </Label>
             {!useCurrentDate && (
-              <DatePicker locale={locale} defaultValue={new Date()} name="date" />
+              <DatePicker
+                locale={locale}
+                defaultValue={new Date()}
+                name="date"
+              />
             )}
           </div>
 

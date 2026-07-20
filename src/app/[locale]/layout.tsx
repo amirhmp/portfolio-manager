@@ -1,6 +1,9 @@
 import Sidebar from "@/components/Sidebar";
+import { SettingsProvider } from "@/components/settings-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { DISPLAY_SCALE_COOKIE_KEY, THEME_COOKIE_KEY } from "@/constants";
 import { routing } from "@/i18n/routing";
+import { parseDisplayScale, parseTheme } from "@/lib/settings-cookies";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { hasLocale, type Locale, NextIntlClientProvider } from "next-intl";
@@ -85,12 +88,15 @@ export default async function RootLayout({
   const dir = locale === "fa" ? "rtl" : "ltr";
   const isRtl = dir === "rtl";
 
-  // Theme lives in a cookie (not localStorage) specifically so it can be
-  // read here, on the server, and rendered correctly on the very first
-  // response -- no client-side correction/blocking script needed. Same
-  // default as before: anything other than exactly "light" is dark.
+  // Theme and Display Scale both live in cookies (not localStorage)
+  // specifically so they can be read here, on the server, and rendered
+  // correctly on the very first response -- no client-side
+  // correction/blocking script needed.
   const cookieStore = await cookies();
-  const theme = cookieStore.get("theme")?.value === "light" ? "light" : "dark";
+  const theme = parseTheme(cookieStore.get(THEME_COOKIE_KEY)?.value);
+  const displayScale = parseDisplayScale(
+    cookieStore.get(DISPLAY_SCALE_COOKIE_KEY)?.value,
+  );
 
   // English: leave every font variable pointing at its own font (Geist /
   // Geist Mono / Fraunces) exactly as before.
@@ -125,13 +131,18 @@ export default async function RootLayout({
     >
       <body className="h-full flex overflow-hidden bg-background">
         <NextIntlClientProvider messages={messages}>
-          <Sidebar theme={theme} />
-          <main className="flex-1 h-full overflow-y-auto">
-            <div className="mx-auto max-w-6xl px-6 py-10 sm:px-10">
-              {children}
-            </div>
-          </main>
-          <Toaster />
+          <SettingsProvider
+            initialTheme={theme}
+            initialDisplayScale={displayScale}
+          >
+            <Sidebar />
+            <main className="flex-1 h-full overflow-y-auto">
+              <div className="mx-auto max-w-6xl px-6 py-10 sm:px-10">
+                {children}
+              </div>
+            </main>
+            <Toaster />
+          </SettingsProvider>
         </NextIntlClientProvider>
       </body>
     </html>

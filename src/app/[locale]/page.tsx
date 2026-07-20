@@ -108,7 +108,7 @@ export default async function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="font-serif text-3xl font-medium tabular-nums text-foreground">
-              {totalCash.toLocaleString()}
+              <PriceLabel value={totalCash} />
             </div>
           </CardContent>
         </Card>
@@ -120,7 +120,7 @@ export default async function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="font-serif text-3xl font-medium tabular-nums text-primary">
-              {totalReceivedCapital.toLocaleString()}
+              <PriceLabel value={totalReceivedCapital} />
             </div>
             <p className="mt-1 font-mono text-[0.65rem] text-muted-foreground">
               <PriceLabel value={totalCapitalIncreased} /> −{" "}
@@ -213,7 +213,7 @@ export default async function Dashboard() {
                   </Link>
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
-                  {user.cash.toLocaleString()}
+                  <PriceLabel value={user.cash} />
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
                   {t("shareCount", {

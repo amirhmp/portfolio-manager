@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Link } from "@/i18n/navigation";
 import { getRealPrice } from "@/lib/pricing";
+import { PriceLabel } from "./price/PriceLabel";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -119,19 +120,19 @@ export default function TransactionGroupsTable({
                   {group.participants.length}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
-                  {group.count.toLocaleString()}
+                  {trade ? group.count.toLocaleString() : <PriceLabel value={group.count} />}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
-                  {trade ? group.unitPrice?.toLocaleString() : "—"}
+                  {trade ? <PriceLabel value={group.unitPrice} /> : "—"}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
                   {trade ? `${group.commission ?? 0}%` : "—"}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
-                  {realPrice != null ? realPrice.toLocaleString() : "—"}
+                  {realPrice != null ? <PriceLabel value={realPrice} /> : "—"}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums font-medium">
-                  {group.totalCost.toLocaleString()}
+                  <PriceLabel value={group.totalCost} />
                 </TableCell>
               </TableRow>
             );
@@ -183,9 +184,11 @@ export default function TransactionGroupsTable({
                     {t("unitPrice")}
                   </p>
                   <p className="font-mono text-lg font-medium tabular-nums text-foreground">
-                    {isTrade(selected.type) && selected.unitPrice != null
-                      ? selected.unitPrice.toLocaleString()
-                      : "—"}
+                    {isTrade(selected.type) && selected.unitPrice != null ? (
+                      <PriceLabel value={selected.unitPrice} />
+                    ) : (
+                      "—"
+                    )}
                   </p>
                 </div>
                 <div>
@@ -201,7 +204,11 @@ export default function TransactionGroupsTable({
                     {t("totalCount")}
                   </p>
                   <p className="font-mono text-lg font-medium tabular-nums text-primary">
-                    {selected.count.toLocaleString()}
+                    {isTrade(selected.type) ? (
+                      selected.count.toLocaleString()
+                    ) : (
+                      <PriceLabel value={selected.count} />
+                    )}
                   </p>
                 </div>
               </div>
@@ -244,10 +251,14 @@ export default function TransactionGroupsTable({
                             </Link>
                           </TableCell>
                           <TableCell className="text-right font-mono tabular-nums">
-                            {p.count.toLocaleString()}
+                            {isTrade(selected.type) ? (
+                              p.count.toLocaleString()
+                            ) : (
+                              <PriceLabel value={p.count} />
+                            )}
                           </TableCell>
                           <TableCell className="text-right font-mono tabular-nums">
-                            {p.totalCost.toLocaleString()}
+                            <PriceLabel value={p.totalCost} />
                           </TableCell>
                           <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
                             {countPercent.toLocaleString(undefined, {

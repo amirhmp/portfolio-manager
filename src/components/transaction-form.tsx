@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { PriceLabel } from "./price/PriceLabel";
 import { PriceInput } from "./price/PriceInput";
 import DatePicker from "./ui/date-picker";
 import {
@@ -172,7 +173,7 @@ export default function TransactionForm({
                     {t("totalCash")}
                   </p>
                   <p className="font-serif text-2xl font-semibold tabular-nums text-foreground">
-                    {totalCash.toLocaleString()}
+                    <PriceLabel value={totalCash} />
                   </p>
                 </div>
               </Label>
@@ -246,7 +247,7 @@ export default function TransactionForm({
                       </span>
                       <span className="font-mono text-xs tabular-nums text-muted-foreground">
                         {showShares ? t("shares") : t("cash")}:{" "}
-                        {metric.toLocaleString()}
+                        {showShares ? metric.toLocaleString() : <PriceLabel value={metric} />}
                       </span>
                     </div>
                   </Label>
