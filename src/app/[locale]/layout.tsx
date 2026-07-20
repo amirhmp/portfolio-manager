@@ -16,6 +16,7 @@ import {
   Markazi_Text,
   Vazirmatn,
 } from "next/font/google";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 
@@ -84,6 +85,13 @@ export default async function RootLayout({
   const dir = locale === "fa" ? "rtl" : "ltr";
   const isRtl = dir === "rtl";
 
+  // Theme lives in a cookie (not localStorage) specifically so it can be
+  // read here, on the server, and rendered correctly on the very first
+  // response -- no client-side correction/blocking script needed. Same
+  // default as before: anything other than exactly "light" is dark.
+  const cookieStore = await cookies();
+  const theme = cookieStore.get("theme")?.value === "light" ? "light" : "dark";
+
   // English: leave every font variable pointing at its own font (Geist /
   // Geist Mono / Fraunces) exactly as before.
   // Farsi: redirect --font-geist-sans and --font-geist-mono to Vazirmatn,
@@ -110,25 +118,14 @@ export default async function RootLayout({
         vazir.variable,
         markaziText.variable,
         "h-full antialiased",
+        theme === "dark" && "dark",
       )}
       style={fontOverrides}
       suppressHydrationWarning
     >
-      <head>
-        {/* Runs before first paint so the stored/default theme (defaulting
-            to dark, matching this app's original look) applies with no
-            flash of the wrong theme. Kept in sync with the toggle in
-            Sidebar.tsx, which reads/writes the same "theme" localStorage
-            key and class. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"){document.documentElement.classList.add("dark");}}catch(e){document.documentElement.classList.add("dark");}})();`,
-          }}
-        />
-      </head>
       <body className="h-full flex overflow-hidden bg-background">
         <NextIntlClientProvider messages={messages}>
-          <Sidebar />
+          <Sidebar theme={theme} />
           <main className="flex-1 h-full overflow-y-auto">
             <div className="mx-auto max-w-6xl px-6 py-10 sm:px-10">
               {children}

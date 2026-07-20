@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+import { THEME_COOKIE_KEY } from "@/constants";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -30,17 +31,20 @@ import {
 import Switch from "./ui/switch";
 
 const COLLAPSE_STORAGE_KEY = "sidebar-collapsed";
-const THEME_STORAGE_KEY = "theme";
 const LOCALES = ["en", "fa"] as const;
 
-export default function Sidebar() {
+export default function Sidebar({
+  theme: initialTheme,
+}: {
+  theme: "light" | "dark";
+}) {
   const t = useTranslations("Sidebar");
   const locale = useLocale();
   const pathname = usePathname();
   const params = useParams();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<"light" | "dark">(initialTheme);
 
   const groups = [
     {
@@ -79,11 +83,6 @@ export default function Sidebar() {
   useEffect(() => {
     const stored = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
     if (stored === "1") setCollapsed(true);
-
-    // The blocking script in [locale]/layout.tsx already applied the
-    // stored/default theme before paint -- just read the resulting class
-    // rather than re-deciding a default here.
-    setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
   }, []);
 
   function toggleCollapsed() {
@@ -97,8 +96,12 @@ export default function Sidebar() {
   function toggleTheme() {
     setTheme((prev) => {
       const next = prev === "dark" ? "light" : "dark";
+      // Flip the class immediately for instant feedback in this tab; the
+      // cookie is what makes the *next* server render (this tab's next
+      // navigation, or a fresh visit) come back with the right theme
+      // already applied, no client-side correction needed.
       document.documentElement.classList.toggle("dark", next === "dark");
-      window.localStorage.setItem(THEME_STORAGE_KEY, next);
+      document.cookie = `${THEME_COOKIE_KEY}=${next}; path=/; max-age=31536000; SameSite=Lax`;
       return next;
     });
   }
