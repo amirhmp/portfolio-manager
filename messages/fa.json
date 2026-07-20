@@ -37,7 +37,9 @@
     "shares": "سهام",
     "shareCount": "{count, plural, one {# سهم} other {# سهم}}",
     "noUsersYet": "هنوز کاربری وجود ندارد.",
-    "createOne": "یکی بسازید"
+    "createOne": "یکی بسازید",
+    "totalReceivedCapital": "کل سرمایه دریافتی",
+    "groupCashExitTitle": "خروج گروهی نقدینگی"
   },
   "PortfolioPieChart": {
     "cash": "موجودی نقدی",
@@ -137,7 +139,8 @@
     "count": "تعداد",
     "cost": "هزینه",
     "percentOfCount": "٪ از تعداد",
-    "percentOfCost": "٪ از هزینه"
+    "percentOfCost": "٪ از هزینه",
+    "typeGroupCashExited": "خروج گروهی نقدینگی"
   },
   "UserTransactionsTable": {
     "filterByType": "فیلتر بر اساس نوع",
@@ -190,7 +193,10 @@
     "stock": "سهم",
     "count": "تعداد",
     "noSharesHeld": "سهامی نگهداری نمی‌شود.",
-    "transactionHistory": "تاریخچه تراکنش‌ها"
+    "transactionHistory": "تاریخچه تراکنش‌ها",
+    "totalReceivedCapital": "کل سرمایه دریافتی",
+    "capitalIncreased": "افزایش سرمایه",
+    "cashExited": "خروج نقدینگی"
   },
   "IncreaseCapitalForm": {
     "amount": "مبلغ",
@@ -216,6 +222,28 @@
     "amountMustBePositive": "مبلغ باید بزرگ‌تر از صفر باشد",
     "userNotFound": "کاربر یافت نشد",
     "insufficientCashExit": "موجودی نقدی کافی برای برداشت وجود ندارد",
-    "somethingWentWrong": "مشکلی پیش آمد. لطفاً دوباره تلاش کنید."
+    "somethingWentWrong": "مشکلی پیش آمد. لطفاً دوباره تلاش کنید.",
+    "noTransactionsToUndo": "تراکنشی برای واگرد وجود ندارد."
+  },
+  "UndoLastTransaction": {
+    "button": "واگرد آخرین تراکنش",
+    "dialogTitle": "این تراکنش واگرد شود؟",
+    "dialogDescription": "این کار تراکنش را برای همیشه حذف کرده و تأثیر آن بر نقدینگی و سهام را برمی‌گرداند. این عمل قابل بازگشت نیست.",
+    "summaryType": "نوع",
+    "summaryDate": "تاریخ",
+    "summaryCount": "تعداد",
+    "summaryTotal": "مبلغ کل",
+    "cancel": "انصراف",
+    "confirm": "واگرد تراکنش"
+  },
+  "GroupCashExitForm": {
+    "amountLabel": "مبلغ خروج",
+    "submit": "خروج نقدینگی",
+    "perUserShare": "سهم هر کاربر",
+    "totalCashLabel": "مجموع نقدینگی",
+    "cash": "نقدینگی",
+    "willExit": "دریافت می‌کند",
+    "noUsers": "هنوز کاربری وجود ندارد.",
+    "note": "مجموع برداشت از صندوق:"
   }
 }

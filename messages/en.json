@@ -37,7 +37,9 @@
     "shares": "Shares",
     "shareCount": "{count, plural, one {# stock} other {# stocks}}",
     "noUsersYet": "No users yet.",
-    "createOne": "Create one"
+    "createOne": "Create one",
+    "totalReceivedCapital": "Total Received Capital",
+    "groupCashExitTitle": "Group Cash Exit"
   },
   "PortfolioPieChart": {
     "cash": "Cash",
@@ -137,7 +139,8 @@
     "count": "Count",
     "cost": "Cost",
     "percentOfCount": "% of Count",
-    "percentOfCost": "% of Cost"
+    "percentOfCost": "% of Cost",
+    "typeGroupCashExited": "Group Cash Exit"
   },
   "UserTransactionsTable": {
     "filterByType": "Filter by type",
@@ -190,7 +193,10 @@
     "stock": "Stock",
     "count": "Count",
     "noSharesHeld": "No shares held.",
-    "transactionHistory": "Transaction History"
+    "transactionHistory": "Transaction History",
+    "totalReceivedCapital": "Total Received Capital",
+    "capitalIncreased": "Capital Increased",
+    "cashExited": "Cash Exited"
   },
   "IncreaseCapitalForm": {
     "amount": "Amount",
@@ -216,6 +222,28 @@
     "amountMustBePositive": "Amount must be greater than 0",
     "userNotFound": "User not found",
     "insufficientCashExit": "Insufficient cash to exit",
-    "somethingWentWrong": "Something went wrong. Please try again."
+    "somethingWentWrong": "Something went wrong. Please try again.",
+    "noTransactionsToUndo": "There are no transactions to undo."
+  },
+  "UndoLastTransaction": {
+    "button": "Undo Last Transaction",
+    "dialogTitle": "Undo this transaction?",
+    "dialogDescription": "This permanently deletes the transaction and reverses its effect on cash and shares. This can't be undone.",
+    "summaryType": "Type",
+    "summaryDate": "Date",
+    "summaryCount": "Count",
+    "summaryTotal": "Total",
+    "cancel": "Cancel",
+    "confirm": "Undo Transaction"
+  },
+  "GroupCashExitForm": {
+    "amountLabel": "Exit Amount",
+    "submit": "Exit Cash",
+    "perUserShare": "Per-user share",
+    "totalCashLabel": "Total Cash",
+    "cash": "cash",
+    "willExit": "will exit",
+    "noUsers": "No users yet.",
+    "note": "Total withdrawn from the pool:"
   }
 }
