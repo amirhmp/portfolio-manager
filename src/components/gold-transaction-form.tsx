@@ -244,6 +244,7 @@ export default function GoldTransactionForm({
                 name="amount"
                 required
                 min={0}
+                maxFractions={3}
                 step="any"
                 placeholder={t("purchasedAmountPlaceholder")}
                 value={purchasedAmount}

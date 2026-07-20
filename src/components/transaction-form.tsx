@@ -277,7 +277,7 @@ export default function TransactionForm({
                 name="count"
                 required
                 min={0}
-                maxFractions={0}
+                maxFractions={3}
                 step="any"
                 placeholder="0"
                 className="font-mono tabular-nums"
