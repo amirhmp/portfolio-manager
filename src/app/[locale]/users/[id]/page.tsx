@@ -37,6 +37,21 @@ export default async function UserDetailPage({
   
   if (!user) return notFound();
 
+  // Total received capital = everything this user has put in (capital
+  // increases) minus everything they've taken out (individual cash exits
+  // and their share of any group cash exits).
+  const capitalIncreased = user.transactions
+    .filter((tx) => tx.transactionGroup.type === "capital-increased")
+    .reduce((sum, tx) => sum + tx.totalCost, 0);
+  const cashExited = user.transactions
+    .filter(
+      (tx) =>
+        tx.transactionGroup.type === "cash-exited" ||
+        tx.transactionGroup.type === "group-cash-exited",
+    )
+    .reduce((sum, tx) => sum + tx.totalCost, 0);
+  const totalReceivedCapital = capitalIncreased - cashExited;
+
   return (
     <div>
       <div className="mb-8">
@@ -49,7 +64,7 @@ export default async function UserDetailPage({
         <div className="mt-3 ledger-rule" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
@@ -77,6 +92,23 @@ export default async function UserDetailPage({
                   : t("stockPlural")}
               </span>
             </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
+              {t("totalReceivedCapital")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="font-serif text-3xl font-medium tabular-nums text-foreground">
+              <PriceLabel value={totalReceivedCapital} />
+            </div>
+            <p className="mt-1 font-mono text-[0.65rem] text-muted-foreground">
+              {t("capitalIncreased")}: <PriceLabel value={capitalIncreased} />
+              {" − "}
+              {t("cashExited")}: <PriceLabel value={cashExited} />
+            </p>
           </CardContent>
         </Card>
       </div>

@@ -1,5 +1,7 @@
+import GroupCashExitForm from "@/components/group-cash-exit-form";
 import PageHeader from "@/components/page-header";
 import PortfolioPieChart from "@/components/portfolio-pie-chart";
+import { PriceLabel } from "@/components/price/PriceLabel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -17,27 +19,42 @@ export default async function Dashboard() {
   const t = await getTranslations("Dashboard");
   const tPie = await getTranslations("PortfolioPieChart");
 
-  const [users, stocks, lastPriceGroups] = await Promise.all([
-    prisma.user.findMany({
-      include: {
-        shares: { include: { stock: true } },
-      },
-    }),
-    prisma.stock.findMany({
-      orderBy: { name: "asc" },
-      include: { shares: true },
-    }),
-    // Most recent priced trade per stock, used below as a stand-in "current
-    // price" -- there's no live market price field in the schema, so a
-    // stock's last traded unitPrice is the best available valuation basis.
-    prisma.transactionGroup.findMany({
-      where: { stockId: { not: null }, unitPrice: { not: null } },
-      orderBy: { dealDate: "desc" },
-      select: { stockId: true, unitPrice: true },
-    }),
-  ]);
+  const [users, stocks, lastPriceGroups, increasedAgg, exitedAgg] =
+    await Promise.all([
+      prisma.user.findMany({
+        include: {
+          shares: { include: { stock: true } },
+        },
+      }),
+      prisma.stock.findMany({
+        orderBy: { name: "asc" },
+        include: { shares: true },
+      }),
+      // Most recent priced trade per stock, used below as a stand-in "current
+      // price" -- there's no live market price field in the schema, so a
+      // stock's last traded unitPrice is the best available valuation basis.
+      prisma.transactionGroup.findMany({
+        where: { stockId: { not: null }, unitPrice: { not: null } },
+        orderBy: { dealDate: "desc" },
+        select: { stockId: true, unitPrice: true },
+      }),
+      prisma.transactionGroup.aggregate({
+        where: { type: "capital-increased" },
+        _sum: { totalCost: true },
+      }),
+      // Both the single-user "cash-exited" and the multi-user
+      // "group-cash-exited" reduce received capital the same way.
+      prisma.transactionGroup.aggregate({
+        where: { type: { in: ["cash-exited", "group-cash-exited"] } },
+        _sum: { totalCost: true },
+      }),
+    ]);
 
   const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
+
+  const totalCapitalIncreased = increasedAgg._sum.totalCost ?? 0;
+  const totalCashExited = exitedAgg._sum.totalCost ?? 0;
+  const totalReceivedCapital = totalCapitalIncreased - totalCashExited;
 
   const lastPriceByStock = new Map<number, number>();
   for (const g of lastPriceGroups) {
@@ -86,18 +103,6 @@ export default async function Dashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
-              {t("stocksHeld")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="font-serif text-3xl font-medium tabular-nums text-primary">
-              {sharesByStock.length.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
               {t("totalCash")}
             </CardTitle>
           </CardHeader>
@@ -105,6 +110,22 @@ export default async function Dashboard() {
             <div className="font-serif text-3xl font-medium tabular-nums text-foreground">
               {totalCash.toLocaleString()}
             </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="font-mono text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
+              {t("totalReceivedCapital")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="font-serif text-3xl font-medium tabular-nums text-primary">
+              {totalReceivedCapital.toLocaleString()}
+            </div>
+            <p className="mt-1 font-mono text-[0.65rem] text-muted-foreground">
+              <PriceLabel value={totalCapitalIncreased} /> −{" "}
+              <PriceLabel value={totalCashExited} />
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -120,6 +141,17 @@ export default async function Dashboard() {
               {t("noPriceNote")}
             </p>
           )}
+        </CardContent>
+      </Card>
+
+      <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
+        {t("groupCashExitTitle")}
+      </h2>
+      <Card className="mb-8">
+        <CardContent className="pt-6">
+          <GroupCashExitForm
+            users={users.map((u) => ({ id: u.id, name: u.name, cash: u.cash }))}
+          />
         </CardContent>
       </Card>
 
