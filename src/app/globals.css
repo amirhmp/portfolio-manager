@@ -147,3 +147,17 @@
   }
 }
 
+/* Sonner injects its own base stylesheet with a hardcoded font-family that
+   otherwise wins over a plain `className`/`style` override (a well-known
+   shadcn/sonner issue -- see shadcn-ui/ui#3579), so the app font has to be
+   forced back in with higher specificity here. */
+[data-sonner-toaster] {
+  --normal-font: var(--font-sans);
+  font-family: var(--font-sans) !important;
+}
+[data-sonner-toaster] [data-sonner-toast],
+[data-sonner-toaster] [data-title],
+[data-sonner-toaster] [data-description] {
+  font-family: var(--font-sans) !important;
+}
+
