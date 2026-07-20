@@ -109,11 +109,23 @@ export default async function RootLayout({
         fraunces.variable,
         vazir.variable,
         markaziText.variable,
-        "dark h-full antialiased",
+        "h-full antialiased",
       )}
       style={fontOverrides}
       suppressHydrationWarning
     >
+      <head>
+        {/* Runs before first paint so the stored/default theme (defaulting
+            to dark, matching this app's original look) applies with no
+            flash of the wrong theme. Kept in sync with the toggle in
+            Sidebar.tsx, which reads/writes the same "theme" localStorage
+            key and class. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"){document.documentElement.classList.add("dark");}}catch(e){document.documentElement.classList.add("dark");}})();`,
+          }}
+        />
+      </head>
       <body className="h-full flex overflow-hidden bg-background">
         <NextIntlClientProvider messages={messages}>
           <Sidebar />

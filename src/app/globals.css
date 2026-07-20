@@ -46,43 +46,44 @@
 }
 
 :root {
-  /* Vault / ledger dark theme — warm brass-gold accent on near-black charcoal */
-  --background: #0a0b0d;
-  --foreground: #ece8df;
-  --card: #131417;
-  --card-foreground: #ece8df;
-  --popover: #17181c;
-  --popover-foreground: #ece8df;
-  --primary: #c7a25c;
-  --primary-foreground: #211804;
-  --secondary: #1c1e22;
-  --secondary-foreground: #ece8df;
-  --muted: #1a1c20;
-  --muted-foreground: #93959c;
-  --accent: #1f2125;
-  --accent-foreground: #ece8df;
-  --destructive: #b5654a;
-  --destructive-foreground: #fbeee7;
-  --border: #24262b;
-  --input: #24262b;
-  --ring: #c7a25c;
-  --chart-1: #c7a25c;
-  --chart-2: #6fa287;
-  --chart-3: #b5654a;
-  --chart-4: #7c8fa6;
-  --chart-5: #d9c9a3;
-  --sidebar: #0d0e10;
-  --sidebar-foreground: #d3d0c7;
-  --sidebar-primary: #c7a25c;
-  --sidebar-primary-foreground: #211804;
-  --sidebar-accent: #17181b;
-  --sidebar-accent-foreground: #ece8df;
-  --sidebar-border: #212226;
-  --sidebar-ring: #c7a25c;
+  /* Vault / ledger LIGHT theme — warm parchment paper with a deep brass-gold accent */
+  --background: #f7f4ec;
+  --foreground: #221f1a;
+  --card: #fffdf8;
+  --card-foreground: #221f1a;
+  --popover: #fffdf8;
+  --popover-foreground: #221f1a;
+  --primary: #8a6a2e;
+  --primary-foreground: #fdf8ee;
+  --secondary: #ede7d8;
+  --secondary-foreground: #221f1a;
+  --muted: #efeadd;
+  --muted-foreground: #6b6558;
+  --accent: #e9e1cd;
+  --accent-foreground: #221f1a;
+  --destructive: #a24a30;
+  --destructive-foreground: #fdf3ee;
+  --border: #e2dccc;
+  --input: #e2dccc;
+  --ring: #8a6a2e;
+  --chart-1: #8a6a2e;
+  --chart-2: #3f7a5c;
+  --chart-3: #a24a30;
+  --chart-4: #4c6a86;
+  --chart-5: #b79b6a;
+  --sidebar: #efe9dc;
+  --sidebar-foreground: #3c362b;
+  --sidebar-primary: #8a6a2e;
+  --sidebar-primary-foreground: #fdf8ee;
+  --sidebar-accent: #e6ded0;
+  --sidebar-accent-foreground: #221f1a;
+  --sidebar-border: #ddd4c0;
+  --sidebar-ring: #8a6a2e;
   --radius: 0.625rem;
 }
 
 .dark {
+  /* Vault / ledger DARK theme — warm brass-gold accent on near-black charcoal */
   --background: #0a0b0d;
   --foreground: #ece8df;
   --card: #131417;

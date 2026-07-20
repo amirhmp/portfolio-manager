@@ -10,8 +10,10 @@ import {
   Gem,
   Languages,
   LayoutDashboard,
+  Moon,
   PlusCircle,
   Sparkles,
+  Sun,
   Users,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -25,8 +27,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import Switch from "./ui/switch";
 
 const COLLAPSE_STORAGE_KEY = "sidebar-collapsed";
+const THEME_STORAGE_KEY = "theme";
 const LOCALES = ["en", "fa"] as const;
 
 export default function Sidebar() {
@@ -36,6 +40,7 @@ export default function Sidebar() {
   const params = useParams();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   const groups = [
     {
@@ -74,12 +79,26 @@ export default function Sidebar() {
   useEffect(() => {
     const stored = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
     if (stored === "1") setCollapsed(true);
+
+    // The blocking script in [locale]/layout.tsx already applied the
+    // stored/default theme before paint -- just read the resulting class
+    // rather than re-deciding a default here.
+    setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
   }, []);
 
   function toggleCollapsed() {
     setCollapsed((prev) => {
       const next = !prev;
       window.localStorage.setItem(COLLAPSE_STORAGE_KEY, next ? "1" : "0");
+      return next;
+    });
+  }
+
+  function toggleTheme() {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      document.documentElement.classList.toggle("dark", next === "dark");
+      window.localStorage.setItem(THEME_STORAGE_KEY, next);
       return next;
     });
   }
@@ -170,6 +189,32 @@ export default function Sidebar() {
           collapsed ? "px-2" : "px-3",
         )}
       >
+        {!collapsed && (
+          <div className="mb-1 flex items-center justify-between gap-2 px-3 py-1.5">
+            <span className="flex items-center gap-2">
+              {theme === "dark" ? (
+                <Moon
+                  className="size-4 shrink-0 text-sidebar-foreground/40"
+                  strokeWidth={1.75}
+                />
+              ) : (
+                <Sun
+                  className="size-4 shrink-0 text-sidebar-foreground/40"
+                  strokeWidth={1.75}
+                />
+              )}
+              <span className="text-sm font-medium text-sidebar-foreground/70">
+                {t("theme")}
+              </span>
+            </span>
+            <Switch
+              checked={theme === "dark"}
+              onCheckedChange={toggleTheme}
+              aria-label={t("theme")}
+            />
+          </div>
+        )}
+
         {!collapsed && (
           <div className="mb-1 flex items-center gap-2 px-3 py-1.5">
             <Languages
