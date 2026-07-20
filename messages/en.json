@@ -217,7 +217,7 @@
     "cannotDeleteGold": "Can not delete 'Gold'",
     "usersNotFound": "Some users not found",
     "noCashUsers": "None of the selected users have any cash available for this transaction.",
-    "insufficientCash": "Selected users have no sufficient cash available for this transaction. The total available cash is ${amount}",
+    "insufficientCash": "Selected users have no sufficient cash available for this transaction. The total available cash is ${amount}. You need ${extra} more cash.",
     "noSharesUsers": "None of the selected users hold any shares of this stock.",
     "insufficientShares": "Selected users have no sufficient shares to sell. The total available shares are {amount}",
     "amountMustBePositive": "Amount must be greater than 0",

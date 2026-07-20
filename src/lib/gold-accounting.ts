@@ -78,7 +78,10 @@ export async function submitTransaction(
       const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
       if (totalCash < totalCost) {
         throw new AppError(
-          t("insufficientCash", { amount: normalizePrice(totalCash) }),
+          t("insufficientCash", {
+            amount: normalizePrice(totalCash),
+            extra: normalizePrice(totalCost - totalCash, 10),
+          }),
         );
       }
 
@@ -146,9 +149,7 @@ export async function submitTransaction(
 
       const totalShares = shares.reduce((sum, s) => sum + s.count, 0);
       if (totalShares <= count) {
-        throw new AppError(
-          t("insufficientShares", { amount: totalShares }),
-        );
+        throw new AppError(t("insufficientShares", { amount: totalShares }));
       }
 
       const group = await tx.transactionGroup.create({
