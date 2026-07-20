@@ -10,7 +10,8 @@ export type TransactionType =
   | "buy"
   | "sell"
   | "capital-increased"
-  | "cash-exited";
+  | "cash-exited"
+  | "group-cash-exited";
 
 /**
  * Split `total` across `weights` (which should sum to 1) so that the
@@ -277,5 +278,88 @@ export async function submitCashExit(userId: number, amount: number) {
     });
 
     return group;
+  });
+}
+
+/**
+ * Delete the single most-recently-created TransactionGroup and reverse its
+ * effect on every participant's cash/shares -- the exact inverse of
+ * whatever `submitTransaction` / `submitCapitalIncrease` / `submitCashExit`
+ * / `submitGroupCashExit` did when creating it. "Last" means most recently
+ * entered into the system (createdAt), not the group's (possibly
+ * backdated) dealDate, since the point is to undo the action you just took.
+ * Deleting the group cascades to delete its Transaction rows.
+ */
+export async function undoLastTransactionGroup() {
+  const t = await getTranslations("Errors");
+
+  return prisma.$transaction(async (tx) => {
+    const lastGroup = await tx.transactionGroup.findFirst({
+      orderBy: { createdAt: "desc" },
+      include: { transactions: true },
+    });
+    if (!lastGroup) throw new AppError(t("noTransactionsToUndo"));
+
+    for (const participant of lastGroup.transactions) {
+      if (lastGroup.type === "buy") {
+        await tx.user.update({
+          where: { id: participant.userId },
+          data: { cash: { increment: participant.totalCost } },
+        });
+        if (lastGroup.stockId != null) {
+          await tx.userShare.upsert({
+            where: {
+              userId_stockId: {
+                userId: participant.userId,
+                stockId: lastGroup.stockId,
+              },
+            },
+            update: { count: { decrement: participant.count } },
+            create: {
+              userId: participant.userId,
+              stockId: lastGroup.stockId,
+              count: -participant.count,
+            },
+          });
+        }
+      } else if (lastGroup.type === "sell") {
+        await tx.user.update({
+          where: { id: participant.userId },
+          data: { cash: { decrement: participant.totalCost } },
+        });
+        if (lastGroup.stockId != null) {
+          await tx.userShare.upsert({
+            where: {
+              userId_stockId: {
+                userId: participant.userId,
+                stockId: lastGroup.stockId,
+              },
+            },
+            update: { count: { increment: participant.count } },
+            create: {
+              userId: participant.userId,
+              stockId: lastGroup.stockId,
+              count: participant.count,
+            },
+          });
+        }
+      } else if (lastGroup.type === "capital-increased") {
+        await tx.user.update({
+          where: { id: participant.userId },
+          data: { cash: { decrement: participant.totalCost } },
+        });
+      } else if (
+        lastGroup.type === "cash-exited" ||
+        lastGroup.type === "group-cash-exited"
+      ) {
+        await tx.user.update({
+          where: { id: participant.userId },
+          data: { cash: { increment: participant.totalCost } },
+        });
+      }
+    }
+
+    await tx.transactionGroup.delete({ where: { id: lastGroup.id } });
+    return lastGroup;
   });
 }

@@ -49,6 +49,7 @@ const typeBadgeVariant: Record<
   sell: "destructive",
   "capital-increased": "secondary",
   "cash-exited": "secondary",
+  "group-cash-exited": "secondary",
 };
 
 export default function TransactionGroupsTable({
@@ -66,6 +67,7 @@ export default function TransactionGroupsTable({
     sell: t("typeSell"),
     "capital-increased": t("typeCapitalIncreased"),
     "cash-exited": t("typeCashExited"),
+    "group-cash-exited": t("typeGroupCashExited"),
   };
 
   return (
