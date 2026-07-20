@@ -282,6 +282,74 @@ export async function submitCashExit(userId: number, amount: number) {
 }
 
 /**
+ * Withdraw cash from the whole pool at once. Unlike `submitCashExit` (one
+ * user, no split), this is a group event: `amount` is split across every
+ * participating user by their current CASH share -- the exact same
+ * weighting `submitTransaction` uses for a "buy" -- so someone holding more
+ * of the pool's cash also gives up more of the withdrawal. Users with no
+ * cash on hand are excluded from the split, same as a buy.
+ */
+export async function submitGroupCashExit(userIds: number[], amount: number) {
+  const t = await getTranslations("Errors");
+  if (amount <= 0) throw new AppError(t("amountMustBePositive"));
+
+  return prisma.$transaction(async (tx) => {
+    const foundUsers = await tx.user.findMany({
+      where: { id: { in: userIds } },
+    });
+    if (foundUsers.length !== userIds.length)
+      throw new AppError(t("usersNotFound"));
+
+    const users = foundUsers.filter((u) => u.cash > 0);
+    if (users.length === 0) {
+      throw new AppError(t("noCashUsers"));
+    }
+
+    const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
+    if (totalCash < amount) {
+      throw new AppError(
+        t("insufficientCash", { amount: normalizePrice(totalCash) }),
+      );
+    }
+
+    const group = await tx.transactionGroup.create({
+      data: {
+        type: "group-cash-exited",
+        count: amount,
+        totalCost: amount,
+      },
+    });
+
+    const splitAmounts = splitByWeight(
+      users,
+      (u) => u.cash / totalCash,
+      amount,
+    );
+
+    for (let i = 0; i < users.length; i++) {
+      const user = users[i];
+      const userAmount = splitAmounts[i].amount;
+
+      await tx.user.update({
+        where: { id: user.id },
+        data: { cash: { decrement: userAmount } },
+      });
+
+      await tx.transaction.create({
+        data: {
+          userId: user.id,
+          transactionGroupId: group.id,
+          count: userAmount,
+          totalCost: userAmount,
+        },
+      });
+    }
+
+    return group;
+  });
+}
+
+/**
  * Delete the single most-recently-created TransactionGroup and reverse its
  * effect on every participant's cash/shares -- the exact inverse of
  * whatever `submitTransaction` / `submitCapitalIncrease` / `submitCashExit`

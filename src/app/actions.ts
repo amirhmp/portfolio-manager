@@ -5,7 +5,9 @@ import { AppError } from "@/lib/errors";
 import {
   submitCapitalIncrease,
   submitCashExit,
+  submitGroupCashExit,
   submitTransaction,
+  undoLastTransactionGroup,
   type TradeType,
 } from "@/lib/gold-accounting";
 import { prisma } from "@/lib/prisma";
@@ -161,3 +163,19 @@ export const exitUserCash = withErrorHandling(
     revalidatePath("/");
   },
 );
+
+export const exitGroupCash = withErrorHandling(
+  async (userIds: number[], amount: number) => {
+    await submitGroupCashExit(userIds, amount);
+    revalidatePath("/transactions");
+    revalidatePath("/users");
+    revalidatePath("/");
+  },
+);
+
+export const undoLastTransaction = withErrorHandling(async () => {
+  await undoLastTransactionGroup();
+  revalidatePath("/transactions");
+  revalidatePath("/users");
+  revalidatePath("/");
+});
