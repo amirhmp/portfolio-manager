@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for working in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What this is
 
@@ -25,7 +25,7 @@ light/dark theme.
   RadioGroup, Dialog, AlertDialog, Switch, Table, Badge, etc.) — data-slot
   + `cn()` (clsx+tailwind-merge) conventions. Toasts via `sonner`.
 - No test runner / no `package.json` visible in this environment. **Do
-  not attempt to `npm install`, run the dev server, or run Prisma
+  not attempt to `bun install`, run the dev server, or run Prisma
   commands** — verify changes by reading the code carefully instead. This
   also means: don't introduce a new npm dependency (charting libs, theme
   libs, etc.) without confirming it's actually installed — prefer a
@@ -259,6 +259,64 @@ slice is valued using its most recently **traded** `unitPrice` (from the
 latest `TransactionGroup` for that stock, ordered by `dealDate desc`) as
 a stand-in current price, since `Stock` has no live price field in the
 schema; stocks with no trade yet are valued at 0 and flagged in a caption.
+
+## Development Commands
+
+- **Prisma**
+  - `bunx prisma generate` – Regenerate Prisma client after schema changes.
+  - `bunx prisma migrate dev` – Apply migrations to the development database.
+  - `bunx prisma migrate deploy` – Apply migrations to a production database.
+  - `bunx prisma studio` – Open Prisma Studio to inspect/edit data.
+
+- **Next.js**
+  - `bunx next dev` – Start the development server.
+  - `bunx next build` – Build the application for production.
+  - `bunx next start` – Start the production server.
+
+- **Linting & Formatting**
+  - `bunx eslint .` – Run ESLint to lint the codebase.
+  - `bunx prettier --check .` – Check formatting with Prettier.
+  - `bunx prettier --write .` – Fix formatting with Prettier.
+
+- **Type Checking**
+  - `bunx tsc --noEmit` – Run TypeScript type checker.
+
+Note: The repository includes RTK (Rust Token Killer) token‑optimized command prefixes (see the RTK section below). Using `rtk` before commands can significantly reduce token usage when interacting with Claude Code.
+
+## Code Organization
+
+- **src/app** – Next.js App Router pages, layouts, and route groups (locale‑prefixed).
+- **src/components** – Reusable UI components; UI primitives in `src/components/ui/`.
+- **src/lib** – Utility functions, Prisma client wrapper (`prisma.ts`), pricing logic (`pricing.ts`), gold accounting (`gold-accounting.ts`), error handling wrappers (`with-action-error-handling.ts`), and constants (`constants/index.ts`).
+- **src/i18n** – Internationalization configuration (`routing.ts`, `navigation.ts`, `request.ts`).
+- **src/proxy.ts** – Middleware‑equivalent for locale detection and redirect.
+- **src/app/actions.ts** – Server actions wrapped with `withErrorHandling`.
+- **src/app/[locale]/** – Locale‑specific pages (dashboard, transactions, users, stocks, etc.).
+- **src/components/portfolio-pie-chart.tsx** – Dependency‑free inline SVG pie chart.
+- **src/components/settings-provider.tsx** – Context for theme and display scale, with cookie persistence.
+
+## Database Workflow
+
+1. After modifying `schema.prisma`, run `npx prisma generate` to update the generated client.
+2. To apply changes to the database, create a migration with `npx prisma migrate dev --name <migration-name>`.
+3. For production deployments, use `npx prisma migrate deploy`.
+4. Use `npx prisma studio` to visually inspect and edit data during development.
+
+## Internationalization Notes
+
+- The files `messages/en.json` and `messages/fa.json` are not included in the uploaded environment; only the `src/` directory is present.
+- When adding new translation keys (`t("key")`), provide the English and Farsi translations in separate additive files (e.g., `messages-additions.en.json`, `messages-additions.fa.json`) and instruct the user to merge them into the respective message files.
+- Keep all user‑visible strings within the `t()` calls; avoid hard‑coded literals.
+
+## Testing
+
+- No test runner or test files are present in this environment. Testing is expected to be done manually or via external CI not visible here.
+- If tests are added in the future, follow the existing code style and colocate test files with the implementation where appropriate.
+
+## Linting and Formatting
+
+- ESLint is configured via `eslint.config.js` (implicit from `eslint` and `eslint-config-next` dependencies). Run `npx eslint .` to check for lint errors.
+- Prettier is configured via `prettier.config.js` (implicit). Run `npx prettier --check .` to verify formatting and `npx prettier --write .` to fix.
 
 <!-- rtk-instructions v2 -->
 # RTK (Rust Token Killer) - Token-Optimized Commands
