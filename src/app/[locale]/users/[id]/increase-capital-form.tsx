@@ -33,6 +33,7 @@ function IncreaseCapitalForm({ userId }: { userId: number }) {
           min={0}
           step="any"
           placeholder="0"
+          scaled
           className="font-mono tabular-nums"
         />
       </div>

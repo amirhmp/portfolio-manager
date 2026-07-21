@@ -39,6 +39,7 @@ function ExitUserCashForm({
           max={maxAmount}
           step="any"
           placeholder="0"
+          scaled
           className="font-mono tabular-nums"
         />
       </div>

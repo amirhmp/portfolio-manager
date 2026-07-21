@@ -12,11 +12,7 @@ import { useMemo, useState } from "react";
 
 export type GroupCashExitUser = { id: number; name: string; cash: number };
 
-export default function GroupCashExitForm({
-  users,
-}: {
-  users: GroupCashExitUser[];
-}) {
+export default function GroupCashExitForm({ users }: { users: GroupCashExitUser[] }) {
   const t = useTranslations("GroupCashExitForm");
   const [amount, setAmount] = useState<number | null>(null);
   const { isPending, request: exitGroupCash } =
@@ -55,6 +51,7 @@ export default function GroupCashExitForm({
             placeholder="0"
             value={amount}
             onChange={setAmount}
+            scaled
             className="font-mono tabular-nums"
           />
         </div>

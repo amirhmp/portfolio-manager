@@ -296,6 +296,7 @@ export default function TransactionForm({
                 maxFractions={1}
                 step="any"
                 placeholder="0"
+                scaled
                 className="font-mono tabular-nums"
               />
             </div>

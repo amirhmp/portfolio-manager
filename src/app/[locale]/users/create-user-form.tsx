@@ -50,6 +50,7 @@ const CreateUserForm = ({ stocks }: { stocks: Stock[] }) => {
             min={0}
             step="any"
             placeholder="0"
+            scaled
           />
         </div>
         <Button type="submit" loading={isPending}>
