@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from "@/i18n/navigation";
+import { computeBreakEvenPrice, type CostBasisEvent } from "@/lib/cost-basis";
 import { prisma } from "@/lib/prisma";
 import { getTranslations } from "next-intl/server";
 
@@ -19,7 +20,7 @@ export default async function Dashboard() {
   const t = await getTranslations("Dashboard");
   const tPie = await getTranslations("PortfolioPieChart");
 
-  const [users, stocks, lastPriceGroups, increasedAgg, exitedAgg] =
+  const [users, stocks, lastPriceGroups, tradeGroups, increasedAgg, exitedAgg] =
     await Promise.all([
       prisma.user.findMany({
         include: {
@@ -37,6 +38,20 @@ export default async function Dashboard() {
         where: { stockId: { not: null }, unitPrice: { not: null } },
         orderBy: { dealDate: "desc" },
         select: { stockId: true, unitPrice: true },
+      }),
+      // Every buy/sell group, used below to replay a system-wide weighted
+      // average cost basis (break-even price) per stock. A group's own
+      // count/totalCost already represent the whole group regardless of
+      // participant count, so these don't need to be fanned out per user.
+      prisma.transactionGroup.findMany({
+        where: { stockId: { not: null }, type: { in: ["buy", "sell"] } },
+        select: {
+          stockId: true,
+          type: true,
+          count: true,
+          totalCost: true,
+          dealDate: true,
+        },
       }),
       prisma.transactionGroup.aggregate({
         where: { type: "capital-increased" },
@@ -75,6 +90,22 @@ export default async function Dashboard() {
       lastPrice: lastPriceByStock.get(stock.id) ?? null,
     }))
     .filter((s) => s.total > 0);
+
+  // System-wide break-even price ("قیمت سر به سر") per stock: the
+  // weighted-average cost basis of everything the group as a whole still
+  // holds, replayed from every buy/sell TransactionGroup for that stock.
+  const breakEvenByStockId = new Map<number, number | null>();
+  for (const stock of stocks) {
+    const events: CostBasisEvent[] = tradeGroups
+      .filter((g) => g.stockId === stock.id)
+      .map((g) => ({
+        type: g.type as "buy" | "sell",
+        count: g.count,
+        totalCost: g.totalCost,
+        dealDate: g.dealDate,
+      }));
+    breakEvenByStockId.set(stock.id, computeBreakEvenPrice(events));
+  }
 
   const portfolioSlices = [
     { name: tPie("cash"), value: totalCash },
@@ -162,23 +193,81 @@ export default async function Dashboard() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("stock")}</TableHead>
-              <TableHead className="text-right">{t("totalShares")}</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              {sharesByStock.map((stock) => (
+                <TableHead key={stock.id} className="text-right">
+                  {stock.name}
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sharesByStock.map((stock) => (
-              <TableRow key={stock.id}>
-                <TableCell className="font-medium">{stock.name}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
-                  {stock.total.toLocaleString()}
-                </TableCell>
-              </TableRow>
-            ))}
+            {sharesByStock.length > 0 && (
+              <>
+                <TableRow className="bg-muted/40">
+                  <TableCell className="text-muted-foreground">
+                    {t("breakEvenPrice")}
+                  </TableCell>
+                  {sharesByStock.map((stock) => (
+                    <TableCell
+                      key={stock.id}
+                      className="text-right font-mono tabular-nums text-muted-foreground"
+                    >
+                      <PriceLabel
+                        value={breakEvenByStockId.get(stock.id) ?? null}
+                        placeholder="—"
+                      />
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow className="bg-primary/5 hover:bg-primary/10">
+                  <TableCell className="font-semibold text-primary">
+                    {t("total")}
+                  </TableCell>
+                  {sharesByStock.map((stock) => (
+                    <TableCell
+                      key={stock.id}
+                      className="text-right font-mono font-semibold tabular-nums text-primary"
+                    >
+                      {stock.total.toLocaleString()}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </>
+            )}
+            {sharesByStock.length > 0 &&
+              users.map((user) => {
+                const userShareByStockId = new Map(
+                  user.shares.map((s) => [s.stockId, s.count]),
+                );
+                return (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/users/${user.id}`}
+                        className="text-foreground hover:text-primary transition-colors"
+                      >
+                        {user.name}
+                      </Link>
+                    </TableCell>
+                    {sharesByStock.map((stock) => {
+                      const count = userShareByStockId.get(stock.id) ?? 0;
+                      return (
+                        <TableCell
+                          key={stock.id}
+                          className="text-right font-mono tabular-nums text-muted-foreground"
+                        >
+                          {count > 0 ? count.toLocaleString() : "—"}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })}
             {sharesByStock.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={2}
+                  colSpan={1}
                   className="text-center py-8 text-muted-foreground"
                 >
                   {t("noSharesYet")}

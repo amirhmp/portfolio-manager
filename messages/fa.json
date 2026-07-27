@@ -22,6 +22,8 @@
     "settings": "تنظیمات"
   },
   "Dashboard": {
+    "total": "جمع",
+    "breakEvenPrice": "قیمت سر به سر",
     "eyebrow": "نمای کلی",
     "title": "داشبورد",
     "totalUsers": "تعداد کاربران",
@@ -182,6 +184,7 @@
     "initialShares": "سهام اولیه (اختیاری)"
   },
   "UserDetail": {
+    "breakEvenPrice": "قیمت سر به سر",
     "eyebrow": "شرکت‌کننده",
     "cash": "موجودی نقدی",
     "shares": "سهام",

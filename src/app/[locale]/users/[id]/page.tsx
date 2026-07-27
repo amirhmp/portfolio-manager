@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import UserTransactionsTable from "@/components/user-transactions-table";
+import { computeBreakEvenPrice, type CostBasisEvent } from "@/lib/cost-basis";
 import { prisma } from "@/lib/prisma";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -33,8 +34,8 @@ export default async function UserDetailPage({
         orderBy: { transactionGroup: { createdAt: "desc" } },
       },
     },
-  }); 
-  
+  });
+
   if (!user) return notFound();
 
   // Total received capital = everything this user has put in (capital
@@ -51,6 +52,27 @@ export default async function UserDetailPage({
     )
     .reduce((sum, tx) => sum + tx.totalCost, 0);
   const totalReceivedCapital = capitalIncreased - cashExited;
+
+  // Break-even price ("قیمت سر به سر") per stock: the weighted-average cost
+  // basis of this user's currently-held shares, replayed from their own
+  // buy/sell Transaction rows (their portion of each TransactionGroup).
+  const breakEvenByStockId = new Map<number, number | null>();
+  for (const share of user.shares) {
+    const events: CostBasisEvent[] = user.transactions
+      .filter(
+        (tx) =>
+          tx.transactionGroup.stockId === share.stockId &&
+          (tx.transactionGroup.type === "buy" ||
+            tx.transactionGroup.type === "sell"),
+      )
+      .map((tx) => ({
+        type: tx.transactionGroup.type as "buy" | "sell",
+        count: tx.count,
+        totalCost: tx.totalCost,
+        dealDate: tx.transactionGroup.dealDate,
+      }));
+    breakEvenByStockId.set(share.stockId, computeBreakEvenPrice(events));
+  }
 
   return (
     <div>
@@ -152,6 +174,9 @@ export default async function UserDetailPage({
             <TableRow>
               <TableHead>{t("stock")}</TableHead>
               <TableHead className="text-right">{t("count")}</TableHead>
+              <TableHead className="text-right">
+                {t("breakEvenPrice")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -165,12 +190,18 @@ export default async function UserDetailPage({
                   <TableCell className="text-right font-mono tabular-nums">
                     {share.count.toLocaleString()}
                   </TableCell>
+                  <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                    <PriceLabel
+                      value={breakEvenByStockId.get(share.stockId) ?? null}
+                      placeholder="—"
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
             {user.shares.filter((s) => s.count > 0).length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={2}
+                  colSpan={3}
                   className="text-center py-8 text-muted-foreground"
                 >
                   {t("noSharesHeld")}

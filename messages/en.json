@@ -22,6 +22,8 @@
     "settings": "Settings"
   },
   "Dashboard": {
+    "total": "Total",
+    "breakEvenPrice": "Break-even Price",
     "eyebrow": "Overview",
     "title": "Dashboard",
     "totalUsers": "Total Users",
@@ -182,6 +184,7 @@
     "initialShares": "Initial Shares (optional)"
   },
   "UserDetail": {
+    "breakEvenPrice": "Break-even Price",
     "eyebrow": "Participant",
     "cash": "Cash",
     "shares": "Shares",

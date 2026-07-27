@@ -23,7 +23,7 @@ light/dark theme.
 - UI: Tailwind v4 + `@base-ui/react` primitives (NOT Radix) wrapped in
   shadcn-style `src/components/ui/*` components (Select, Checkbox, Button,
   RadioGroup, Dialog, AlertDialog, Switch, Table, Badge, etc.) — data-slot
-  + `cn()` (clsx+tailwind-merge) conventions. Toasts via `sonner`.
+  - `cn()` (clsx+tailwind-merge) conventions. Toasts via `sonner`.
 - No test runner / no `package.json` visible in this environment. **Do
   not attempt to `bun install`, run the dev server, or run Prisma
   commands** — verify changes by reading the code carefully instead. This
@@ -48,7 +48,7 @@ light/dark theme.
 - `UserShare` — per (user, stock) running share balance (`count`).
   Unique on `[userId, stockId]`.
 - `TransactionGroup` — one **group event**: `type` (`"buy" | "sell" |
-  "capital-increased" | "cash-exited" | "group-cash-exited"`), `count`
+"capital-increased" | "cash-exited" | "group-cash-exited"`), `count`
   (total units traded), `unitPrice`, `commission` (percent, e.g. `0.25` =
   0.25%), `totalCost` (total money), `dealDate` (defaults to `now()`, but
   can be backdated via a date picker in the buy/sell forms — distinct from
@@ -67,11 +67,12 @@ of which fans out into one row per participating `Transaction`.
 ## Core business logic — `src/lib/gold-accounting.ts`
 
 `submitTransaction(userIds, stockId, count, type, unitPrice, commission, dealDate?)`:
+
 - Computes `realPrice = getRealPrice(unitPrice, commission, type)` (buy pays
   more, sell receives less — `src/lib/pricing.ts`), `totalCost = realPrice * count`.
 - **Buy**: only users with `cash > 0` participate; the group's `count`/`totalCost`
   are split across them **by weight = their cash / total eligible cash**
-  (`splitByWeight`, which gives the *last* participant the remainder so the
+  (`splitByWeight`, which gives the _last_ participant the remainder so the
   parts always sum exactly to the total despite float rounding).
 - **Sell**: only `UserShare` rows with `count > 0` for that stock
   participate; split by weight = their share count / total eligible shares.
@@ -114,9 +115,10 @@ resolves the result. Error messages inside `gold-accounting.ts` and
 `capitalIncreased − cashExited`, where `cashExited` includes **both**
 `"cash-exited"` (individual) and `"group-cash-exited"` (group) —
 otherwise a group exit wouldn't move the metric at all. Computed two ways:
+
 - **Per user** (`users/[id]/page.tsx`): filter that user's own
   `Transaction` rows by their `transactionGroup.type`, since a
-  `group-cash-exited` group's own `totalCost` is the *whole* group's
+  `group-cash-exited` group's own `totalCost` is the _whole_ group's
   withdrawal, not any one participant's share.
 - **System-wide** (dashboard): `prisma.transactionGroup.aggregate` summed
   by `type`, since for the aggregate case the group's `totalCost` already
@@ -124,6 +126,45 @@ otherwise a group exit wouldn't move the metric at all. Computed two ways:
 
 Both places show the formula's two operands alongside the result (not
 just the final number), per how this was originally requested.
+
+## Break-even Price (Cost Basis) — `src/lib/cost-basis.ts`
+
+"قیمت سر به سر" (break-even price): the weighted-average cost per unit of
+whatever is currently held for a given stock — the price at which selling
+the remaining position would exactly recover its cost.
+
+`computeBreakEvenPrice(events: CostBasisEvent[])` replays a list of
+`{ type: "buy" | "sell", count, totalCost, dealDate }` events in
+chronological (`dealDate`) order:
+
+- **Buy**: blends into the running average —
+  `avgCost = (avgCost * heldCount + event.totalCost) / (heldCount + event.count)`.
+- **Sell**: does **not** change `avgCost` — only `heldCount` decreases.
+  This mirrors `submitTransaction`, where selling never touches other
+  participants' (or your own remaining) average cost. If a subsequent buy
+  arrives after being fully sold out (`heldCount` back at 0), the old
+  average is naturally zeroed out of the formula and a fresh average
+  starts from that buy alone — no special-casing needed.
+- Returns `null` when nothing is currently held (`heldCount <= 1e-6`,
+  tolerating float noise the same way `splitByWeight` does), since a
+  break-even price is meaningless with no remaining shares.
+
+Computed in two places, both **derived on the fly, not persisted**:
+
+- **Per user** (`users/[id]/page.tsx`, Portfolio table): one call per
+  held stock, replaying that user's own `Transaction` rows (their
+  portion of each `TransactionGroup`) filtered to `type: "buy" | "sell"`
+  and matching `stockId`.
+- **System-wide** (dashboard, shares-by-user table): one call per stock,
+  replaying every `buy`/`sell` `TransactionGroup` for that stock directly
+  (a group's own `count`/`totalCost` already represent the whole group
+  regardless of participant count, so these don't need to be fanned out
+  per user first).
+
+Gold transactions need no special-casing here — `createGoldTransaction`
+already funnels through `submitTransaction` as an ordinary buy/sell on
+`GOLD_STOCK_ID`, so they're just more `TransactionGroup`/`Transaction`
+rows to replay.
 
 ## Money/number formatting
 
@@ -234,7 +275,7 @@ sentinel there.
 (fixed to Gold on the gold form) at the top, then the Buy/Sell type
 selector itself as two full-width cards — each `RadioGroupItem` is
 embedded inside its own card (via `Label htmlFor` wrapping the card), so
-the card *is* the radio option: the Buy card shows Total Cash, the Sell
+the card _is_ the radio option: the Buy card shows Total Cash, the Sell
 card shows Total Shares/Gold for the currently selected stock. Below that,
 a responsive grid of "checkbox-card" participants (a `Label`+`Checkbox`
 pair styled as a bordered card) shows each user's cash (buy) or share
@@ -251,7 +292,23 @@ no "Stocks Held" count card anymore (removed in favor of Total Received
 Capital). Below that: the portfolio composition pie chart, the **Group
 Cash Exit** form (`GroupCashExitForm` — withdraws from the whole pool at
 once, split by cash share, with a live per-user preview), then the
-Total-Shares-by-Stock table and the Users table.
+shares-by-user table and the Users table.
+
+The shares-by-user table (still under the `t("totalSharesByStock")`
+heading) is a pivot: columns are stocks that currently have any shares
+outstanding, rows are users. It replaced the old single-column
+Total-Shares-by-Stock table since it's a strict superset — its first two
+rows _are_ that old table's data plus more:
+
+- Row 1, `t("total")` — total shares per stock, highlighted
+  (`bg-primary/5` + bold primary text) since it's the most-glanced-at row.
+- Row 2, `t("breakEvenPrice")` — the system-wide break-even price per
+  stock (see cost-basis section above).
+- One row per user below that, their share count per stock (`—` where
+  they hold none — 0 is never printed as `0`, to keep the grid scannable).
+
+The separate Users table (name / cash / share-count) further down is
+unrelated and untouched — it shows cash, which isn't part of the pivot.
 
 `components/portfolio-pie-chart.tsx` is a dependency-free inline-SVG pie
 chart (see the no-unconfirmed-dependency rule under Stack). Each stock
@@ -319,6 +376,7 @@ Note: The repository includes RTK (Rust Token Killer) token‑optimized command 
 - Prettier is configured via `prettier.config.js` (implicit). Run `npx prettier --check .` to verify formatting and `npx prettier --write .` to fix.
 
 <!-- rtk-instructions v2 -->
+
 # RTK (Rust Token Killer) - Token-Optimized Commands
 
 ## Golden Rule
@@ -326,6 +384,7 @@ Note: The repository includes RTK (Rust Token Killer) token‑optimized command 
 **Always prefix commands with `rtk`**. If RTK has a dedicated filter, it uses it. If not, it passes through unchanged. This means RTK is always safe to use.
 
 **Important**: Even in command chains with `&&`, use `rtk`:
+
 ```bash
 # ❌ Wrong
 git add . && git commit -m "msg" && git push
@@ -337,6 +396,7 @@ rtk git add . && rtk git commit -m "msg" && rtk git push
 ## RTK Commands by Workflow
 
 ### Build & Compile (80-90% savings)
+
 ```bash
 rtk cargo build         # Cargo build output
 rtk cargo check         # Cargo check output
@@ -348,6 +408,7 @@ rtk next build          # Next.js build with route metrics (87%)
 ```
 
 ### Test (60-99% savings)
+
 ```bash
 rtk cargo test          # Cargo test failures only (90%)
 rtk go test             # Go test failures only (90%)
@@ -361,6 +422,7 @@ rtk test <cmd>          # Generic test wrapper - failures only
 ```
 
 ### Git (59-80% savings)
+
 ```bash
 rtk git status          # Compact status
 rtk git log             # Compact log (works with all git flags)
@@ -379,6 +441,7 @@ rtk git worktree        # Compact worktree
 Note: Git passthrough works for ALL subcommands, even those not explicitly listed.
 
 ### GitHub (26-87% savings)
+
 ```bash
 rtk gh pr view <num>    # Compact PR view (87%)
 rtk gh pr checks        # Compact PR checks (79%)
@@ -388,6 +451,7 @@ rtk gh api              # Compact API responses (26%)
 ```
 
 ### JavaScript/TypeScript Tooling (70-90% savings)
+
 ```bash
 rtk pnpm list           # Compact dependency tree (70%)
 rtk pnpm outdated       # Compact outdated packages (80%)
@@ -398,6 +462,7 @@ rtk prisma              # Prisma without ASCII art (88%)
 ```
 
 ### Files & Search (60-75% savings)
+
 ```bash
 rtk ls <path>           # Tree format, compact (65%)
 rtk read <file>         # Code reading with filtering (60%)
@@ -406,6 +471,7 @@ rtk find <pattern>      # Find grouped by directory (70%)
 ```
 
 ### Analysis & Debug (70-90% savings)
+
 ```bash
 rtk err <cmd>           # Filter errors only from any command
 rtk log <file>          # Deduplicated logs with counts
@@ -417,6 +483,7 @@ rtk diff                # Ultra-compact diffs
 ```
 
 ### Infrastructure (85% savings)
+
 ```bash
 rtk docker ps           # Compact container list
 rtk docker images       # Compact image list
@@ -426,12 +493,14 @@ rtk kubectl logs        # Deduplicated pod logs
 ```
 
 ### Network (65-70% savings)
+
 ```bash
 rtk curl <url>          # Compact HTTP responses (70%)
 rtk wget <url>          # Compact download output (65%)
 ```
 
 ### Meta Commands
+
 ```bash
 rtk gain                # View token savings statistics
 rtk gain --history      # View command history with savings
@@ -443,16 +512,17 @@ rtk init --global       # Add RTK to ~/.claude/CLAUDE.md
 
 ## Token Savings Overview
 
-| Category | Commands | Typical Savings |
-|----------|----------|-----------------|
-| Tests | vitest, playwright, cargo test | 90-99% |
-| Build | next, tsc, lint, prettier | 70-87% |
-| Git | status, log, diff, add, commit | 59-80% |
-| GitHub | gh pr, gh run, gh issue | 26-87% |
-| Package Managers | pnpm, npm, npx | 70-90% |
-| Files | ls, read, grep, find | 60-75% |
-| Infrastructure | docker, kubectl | 85% |
-| Network | curl, wget | 65-70% |
+| Category         | Commands                       | Typical Savings |
+| ---------------- | ------------------------------ | --------------- |
+| Tests            | vitest, playwright, cargo test | 90-99%          |
+| Build            | next, tsc, lint, prettier      | 70-87%          |
+| Git              | status, log, diff, add, commit | 59-80%          |
+| GitHub           | gh pr, gh run, gh issue        | 26-87%          |
+| Package Managers | pnpm, npm, npx                 | 70-90%          |
+| Files            | ls, read, grep, find           | 60-75%          |
+| Infrastructure   | docker, kubectl                | 85%             |
+| Network          | curl, wget                     | 65-70%          |
 
 Overall average: **60-90% token reduction** on common development operations.
+
 <!-- /rtk-instructions -->
