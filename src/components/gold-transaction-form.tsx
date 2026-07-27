@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { GOLD_STOCK_ID, MILLION, MITHQAL_FACTOR } from "@/constants";
+import { GOLD_STOCK_ID, MILLION, MITHQAL_TO_GRAMS_FACTOR } from "@/constants";
 import type { User } from "@/generated/prisma/browser";
 import useSubmitForm from "@/hooks/useSubmitForm";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -67,7 +67,7 @@ export default function GoldTransactionForm({
   const gramPrice = useMemo(() => {
     if (!mithqalPrice) return 0;
     const p = mithqalPrice * MILLION;
-    return p / MITHQAL_FACTOR;
+    return p / MITHQAL_TO_GRAMS_FACTOR;
   }, [mithqalPrice]);
 
   const purchasedWeight = useMemo(() => {

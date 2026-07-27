@@ -149,7 +149,9 @@ export async function submitTransaction(
 
       const totalShares = shares.reduce((sum, s) => sum + s.count, 0);
       if (totalShares <= count) {
-        throw new AppError(t("insufficientShares", { amount: normalizePrice(totalShares, 3) }));
+        throw new AppError(
+          t("insufficientShares", { amount: normalizePrice(totalShares, 3) }),
+        );
       }
 
       const group = await tx.transactionGroup.create({

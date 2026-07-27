@@ -1,6 +1,6 @@
 "use server";
 
-import { GOLD_STOCK_ID, MILLION, MITHQAL_FACTOR } from "@/constants";
+import { GOLD_STOCK_ID, MILLION, MITHQAL_TO_GRAMS_FACTOR } from "@/constants";
 import { AppError } from "@/lib/errors";
 import {
   submitCapitalIncrease,
@@ -11,6 +11,7 @@ import {
   type TradeType,
 } from "@/lib/gold-accounting";
 import { prisma } from "@/lib/prisma";
+import { limitDecimals } from "@/lib/utils";
 import { withErrorHandling } from "@/lib/with-action-error-handling";
 import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
@@ -128,9 +129,13 @@ export const createGoldTransaction = withErrorHandling(
     mithqalPriceInMillions: number,
     date?: string,
   ) => {
-    const grams =
-      (MITHQAL_FACTOR * purchasedAmountInMillions) / mithqalPriceInMillions;
-    const gramPrice = (mithqalPriceInMillions * MILLION) / MITHQAL_FACTOR;
+    const grams = limitDecimals(
+      (purchasedAmountInMillions / mithqalPriceInMillions) *
+        MITHQAL_TO_GRAMS_FACTOR,
+      6,
+    );
+    const gramPrice =
+      (mithqalPriceInMillions * MILLION) / MITHQAL_TO_GRAMS_FACTOR;
     await submitTransaction(
       userIds,
       GOLD_STOCK_ID,

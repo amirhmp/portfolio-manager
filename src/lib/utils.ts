@@ -74,7 +74,9 @@ export function normalizePrice(
 
 export function getExceptionMessage(error: unknown): string {
   if (error instanceof AggregateError) {
-    return error.errors.map(err => (err instanceof Error ? err.message : String(err))).join(", ");
+    return error.errors
+      .map((err) => (err instanceof Error ? err.message : String(err)))
+      .join(", ");
   } else if (error instanceof Error) {
     return error.message;
   } else if (typeof error === "string") {
@@ -86,4 +88,28 @@ export function getExceptionMessage(error: unknown): string {
   } else {
     return "An unknown error occurred.";
   }
+}
+
+/**
+ * Limits a number to a maximum number of decimal places.
+ *
+ * @param value - The number to format.
+ * @param maxDecimals - Maximum number of decimal places.
+ * @param mode - "truncate" (default) or "round".
+ * @returns The formatted number.
+ */
+export function limitDecimals(
+  value: number,
+  maxDecimals: number,
+  mode: "truncate" | "round" = "truncate",
+): number {
+  if (!Number.isFinite(value)) {
+    return value;
+  }
+
+  const factor = 10 ** maxDecimals;
+
+  return mode === "round"
+    ? Math.round(value * factor) / factor
+    : Math.trunc(value * factor) / factor;
 }
