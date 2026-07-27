@@ -1,0 +1,22 @@
+1. In dashboard, a table that rows are users and columns are stocks, and shows 
+   each how many shares of each stock, each user has.
+   the first row is showing total shares. title is `Total`. the color of total row be more highlighted. 
+   the second row is `قیمت سر به سر`. i don't know its english word. it means the calculated price that results from all transactions. 
+2. in users page, there is a table showing how many shares of each stock, the user has. add a column to it for `قیمت سر به سر`
+
+[super feature] -> in this feature, all forms must be dialogs
+3.  Ability to define different platforms. (like binance, EasyTrader, Tetherland, ...)
+    - each platform have its own wallet. each stock must get assigned to at least one platform.
+    - A default Platform get seeded, it can't get removed. for migrations use this platform to migrate existing data.
+    - The user cash 
+        It can get divided into each platform.
+        A form for group money transform from one platform into another
+        A form for individual money transform from one platform into another (in user page)
+    - In Transaction Form
+        a platform combobox gets added next to stock combobox. the stocks and platforms get filtered interchangeably based on selected stock or selected platform
+        based on selected stock and platform value
+    - In gold transaction form
+        a combobox for selecting platform get added at the top of form. 
+        based on selected platform cash and shares count appear in the buy/sell cards. 
+    - In user page and dashboard
+        there are tables showing stock->shares. if there are same stocks from different platforms in a pranthesis mention the platform name.
