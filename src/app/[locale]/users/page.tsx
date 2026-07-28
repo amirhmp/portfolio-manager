@@ -10,8 +10,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from "@/i18n/navigation";
-import { getStocksForSelection } from "@/server/services/stock-service";
-import { getUsersForList } from "@/server/services/user-service";
+import { stockService } from "@/server/services/stock-service";
+import { userService } from "@/server/services/user-service";
 import { getTranslations } from "next-intl/server";
 import CreateUserForm from "./create-user-form";
 import DeleteUserForm from "./delete-user-form";
@@ -19,8 +19,8 @@ import DeleteUserForm from "./delete-user-form";
 export default async function UsersPage() {
   const t = await getTranslations("Users");
   const [users, stocks] = await Promise.all([
-    getUsersForList(),
-    getStocksForSelection(),
+    userService.getUsersForList(),
+    stockService.getStocksForSelection(),
   ]);
 
   return (

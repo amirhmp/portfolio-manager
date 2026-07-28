@@ -3,16 +3,9 @@
 import { GOLD_STOCK_ID, MILLION, MITHQAL_TO_GRAMS_FACTOR } from "@/constants";
 import { limitDecimals } from "@/lib/utils";
 import { withErrorHandling } from "@/lib/with-action-error-handling";
-import {
-  submitCapitalIncrease,
-  submitCashExit,
-  submitGroupCashExit,
-  submitTransaction,
-  undoLastTransactionGroup,
-  type TradeType,
-} from "@/server/services/gold-accounting";
-import * as stockService from "@/server/services/stock-service";
-import * as userService from "@/server/services/user-service";
+import { goldAccountingService, type TradeType } from "@/server/services/gold-accounting";
+import { stockService } from "@/server/services/stock-service";
+import { userService } from "@/server/services/user-service";
 import { revalidatePath } from "next/cache";
 
 // ─── Users ────────────────────────────────────────────
@@ -67,7 +60,7 @@ export const createTransaction = withErrorHandling(
     commission: number = 0,
     date?: string,
   ) => {
-    await submitTransaction(
+    await goldAccountingService.submitTransaction(
       userIds,
       stockId,
       count,
@@ -104,7 +97,7 @@ export const createGoldTransaction = withErrorHandling(
     );
     const gramPrice =
       (mithqalPriceInMillions * MILLION) / MITHQAL_TO_GRAMS_FACTOR;
-    await submitTransaction(
+    await goldAccountingService.submitTransaction(
       userIds,
       GOLD_STOCK_ID,
       grams,
@@ -121,7 +114,7 @@ export const createGoldTransaction = withErrorHandling(
 
 export const increaseUserCapital = withErrorHandling(
   async (userId: number, amount: number) => {
-    await submitCapitalIncrease(userId, amount);
+    await goldAccountingService.submitCapitalIncrease(userId, amount);
     revalidatePath(`/users/${userId}`);
     revalidatePath("/users");
     revalidatePath("/");
@@ -130,7 +123,7 @@ export const increaseUserCapital = withErrorHandling(
 
 export const exitUserCash = withErrorHandling(
   async (userId: number, amount: number) => {
-    await submitCashExit(userId, amount);
+    await goldAccountingService.submitCashExit(userId, amount);
     revalidatePath(`/users/${userId}`);
     revalidatePath("/users");
     revalidatePath("/");
@@ -139,7 +132,7 @@ export const exitUserCash = withErrorHandling(
 
 export const exitGroupCash = withErrorHandling(
   async (userIds: number[], amount: number) => {
-    await submitGroupCashExit(userIds, amount);
+    await goldAccountingService.submitGroupCashExit(userIds, amount);
     revalidatePath("/transactions");
     revalidatePath("/users");
     revalidatePath("/");
@@ -147,7 +140,7 @@ export const exitGroupCash = withErrorHandling(
 );
 
 export const undoLastTransaction = withErrorHandling(async () => {
-  await undoLastTransactionGroup();
+  await goldAccountingService.undoLastTransactionGroup();
   revalidatePath("/transactions");
   revalidatePath("/users");
   revalidatePath("/");

@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import UserTransactionsTable from "@/components/user-transactions-table";
-import { getUserDetail } from "@/server/services/user-service";
+import { userService } from "@/server/services/user-service";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import ExitUserCashForm from "./exit-user-cash-form";
@@ -24,7 +24,7 @@ export default async function UserDetailPage({
   const { id } = await params;
   const userId = parseInt(id);
 
-  const detail = await getUserDetail(userId);
+  const detail = await userService.getUserDetail(userId);
   if (!detail) return notFound();
 
   const { user, capitalIncreased, cashExited, totalReceivedCapital, breakEvenByStockId } =

@@ -1,32 +1,29 @@
 import { GOLD_STOCK_ID } from "@/constants";
 import { AppError } from "@/lib/errors";
-import {
-  createStock as createStockRow,
-  deleteStock as deleteStockRow,
-  findAllStocks,
-  findAllStocksWithCounts,
-} from "@/server/repositories/stock-repository";
+import { stockRepository } from "@/server/repositories/stock-repository";
 import { getTranslations } from "next-intl/server";
 
-/** Transaction/gold new-transaction forms' stock picker; users list page's
- * create-user form (for initial share balances). */
-export function getStocksForSelection() {
-  return findAllStocks();
-}
+export const stockService = {
+  /** Transaction/gold new-transaction forms' stock picker; users list page's
+   * create-user form (for initial share balances). */
+  getStocksForSelection() {
+    return stockRepository.findAllStocks();
+  },
 
-/** Stocks page (`/stocks`): holder/transaction counts per stock. */
-export function getStocksOverview() {
-  return findAllStocksWithCounts();
-}
+  /** Stocks page (`/stocks`): holder/transaction counts per stock. */
+  getStocksOverview() {
+    return stockRepository.findAllStocksWithCounts();
+  },
 
-export function createStock(name: string) {
-  return createStockRow(name);
-}
+  createStock(name: string) {
+    return stockRepository.createStock(name);
+  },
 
-export async function deleteStock(stockId: number) {
-  if (stockId === GOLD_STOCK_ID) {
-    const t = await getTranslations("Errors");
-    throw new AppError(t("cannotDeleteGold"));
-  }
-  return deleteStockRow(stockId);
-}
+  async deleteStock(stockId: number) {
+    if (stockId === GOLD_STOCK_ID) {
+      const t = await getTranslations("Errors");
+      throw new AppError(t("cannotDeleteGold"));
+    }
+    return stockRepository.deleteStock(stockId);
+  },
+};

@@ -1,14 +1,14 @@
 import PageHeader from "@/components/page-header";
 import TransactionForm from "@/components/transaction-form";
-import { getStocksForSelection } from "@/server/services/stock-service";
-import { getUsersForTransactionForm } from "@/server/services/user-service";
+import { stockService } from "@/server/services/stock-service";
+import { userService } from "@/server/services/user-service";
 import { getTranslations } from "next-intl/server";
 
 export default async function NewTransactionPage() {
   const t = await getTranslations("NewTransaction");
   const [users, stocks] = await Promise.all([
-    getUsersForTransactionForm(),
-    getStocksForSelection(),
+    userService.getUsersForTransactionForm(),
+    stockService.getStocksForSelection(),
   ]);
 
   return (

@@ -12,7 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from "@/i18n/navigation";
-import { getDashboardData } from "@/server/services/dashboard-service";
+import { limitDecimals, normalizePrice } from "@/lib/utils";
+import { dashboardService } from "@/server/services/dashboard-service";
 import { getTranslations } from "next-intl/server";
 
 export default async function Dashboard() {
@@ -27,7 +28,7 @@ export default async function Dashboard() {
     totalReceivedCapital,
     sharesByStock,
     breakEvenByStockId,
-  } = await getDashboardData();
+  } = await dashboardService.getDashboardData();
 
   const portfolioSlices = [
     { name: tPie("cash"), value: totalCash },
@@ -135,7 +136,7 @@ export default async function Dashboard() {
                       key={stock.id}
                       className="text-right font-mono font-semibold tabular-nums text-primary"
                     >
-                      {stock.total.toLocaleString()}
+                      {normalizePrice(limitDecimals(stock.total, 3), 3)}
                     </TableCell>
                   ))}
                 </TableRow>

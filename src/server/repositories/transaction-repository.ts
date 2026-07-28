@@ -8,10 +8,9 @@ export interface ParticipantTransactionData {
   totalCost: number;
 }
 
-/** One participant's portion of a `TransactionGroup` (see schema). */
-export function createParticipantTransaction(
-  data: ParticipantTransactionData,
-  db: Db = prisma,
-) {
-  return db.transaction.create({ data });
-}
+export const transactionRepository = {
+  /** One participant's portion of a `TransactionGroup` (see schema). */
+  createParticipantTransaction(data: ParticipantTransactionData, db: Db = prisma) {
+    return db.transaction.create({ data });
+  },
+};

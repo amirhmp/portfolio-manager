@@ -5,13 +5,13 @@ import TransactionGroupsTable, {
 import { Card } from "@/components/ui/card";
 import UndoLastTransactionButton from "@/components/undo-last-transaction-button";
 import { Link } from "@/i18n/navigation";
-import { getTransactionGroupsOverview } from "@/server/services/transactions-service";
+import { transactionsService } from "@/server/services/transactions-service";
 import { getTranslations } from "next-intl/server";
 
 export default async function TransactionsPage() {
   const t = await getTranslations("Transactions");
   const tType = await getTranslations("TransactionGroupsTable");
-  const groups = await getTransactionGroupsOverview();
+  const groups = await transactionsService.getTransactionGroupsOverview();
 
   const typeLabel: Record<string, string> = {
     buy: tType("typeBuy"),

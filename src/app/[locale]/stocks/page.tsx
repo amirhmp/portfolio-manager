@@ -9,14 +9,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { GOLD_STOCK_ID } from "@/constants";
-import { getStocksOverview } from "@/server/services/stock-service";
+import { stockService } from "@/server/services/stock-service";
 import { getTranslations } from "next-intl/server";
 import CreateStockForm from "./_components/create-stock-form";
 import DeleteStockButton from "./_components/delete-stock-btn";
 
 export default async function StocksPage() {
   const t = await getTranslations("Stocks");
-  const stocks = await getStocksOverview();
+  const stocks = await stockService.getStocksOverview();
 
   return (
     <div>
