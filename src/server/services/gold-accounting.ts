@@ -1,17 +1,28 @@
+import { AppError } from "@/lib/errors";
+import { getRealPrice, type TradeType } from "@/lib/pricing";
+import { prisma } from "@/lib/prisma";
+import { normalizePrice } from "@/lib/utils";
+import {
+  adjustUserCash,
+  findUserById,
+  findUsersByIds,
+} from "@/server/repositories/user-repository";
+import {
+  adjustUserShareById,
+  adjustUserShareByStock,
+  findSharesForUsersAndStock,
+} from "@/server/repositories/user-share-repository";
+import {
+  createTransactionGroup,
+  deleteTransactionGroup,
+  findMostRecentlyCreatedWithParticipants,
+} from "@/server/repositories/transaction-group-repository";
+import { createParticipantTransaction } from "@/server/repositories/transaction-repository";
 import { getTranslations } from "next-intl/server";
-import { AppError } from "./errors";
-import { getRealPrice, type TradeType } from "./pricing";
-import { prisma } from "./prisma";
-import { normalizePrice } from "./utils";
 
-export type { TradeType } from "./pricing";
+export type { TradeType } from "@/lib/pricing";
 export { getRealPrice };
-export type TransactionType =
-  | "buy"
-  | "sell"
-  | "capital-increased"
-  | "cash-exited"
-  | "group-cash-exited";
+export type { TransactionGroupType as TransactionType } from "@/server/repositories/transaction-group-repository";
 
 /**
  * Split `total` across `weights` (which should sum to 1) so that the
@@ -60,9 +71,7 @@ export async function submitTransaction(
   const totalCost = realPrice * count;
 
   return prisma.$transaction(async (tx) => {
-    const foundUsers = await tx.user.findMany({
-      where: { id: { in: userIds } },
-    });
+    const foundUsers = await findUsersByIds(userIds, tx);
     if (foundUsers.length !== userIds.length)
       throw new AppError(t("usersNotFound"));
 
@@ -85,17 +94,10 @@ export async function submitTransaction(
         );
       }
 
-      const group = await tx.transactionGroup.create({
-        data: {
-          stockId,
-          type,
-          count,
-          unitPrice,
-          commission,
-          totalCost,
-          dealDate,
-        },
-      });
+      const group = await createTransactionGroup(
+        { stockId, type, count, unitPrice, commission, totalCost, dealDate },
+        tx,
+      );
 
       const splitCounts = splitByWeight(
         users,
@@ -113,25 +115,17 @@ export async function submitTransaction(
         const userCount = splitCounts[i].amount;
         const userCost = splitCosts[i].amount;
 
-        await tx.user.update({
-          where: { id: user.id },
-          data: { cash: { decrement: userCost } },
-        });
-
-        await tx.userShare.upsert({
-          where: { userId_stockId: { userId: user.id, stockId } },
-          update: { count: { increment: userCount } },
-          create: { userId: user.id, stockId, count: userCount },
-        });
-
-        await tx.transaction.create({
-          data: {
+        await adjustUserCash(user.id, -userCost, tx);
+        await adjustUserShareByStock(user.id, stockId, userCount, tx);
+        await createParticipantTransaction(
+          {
             userId: user.id,
             transactionGroupId: group.id,
             count: userCount,
             totalCost: userCost,
           },
-        });
+          tx,
+        );
       }
       return group;
     } else {
@@ -139,9 +133,7 @@ export async function submitTransaction(
       // Users with no shares (count <= 0) for this stock are fully excluded
       // from the calculation -- both from the split and from the
       // total-shares denominator.
-      const allShares = await tx.userShare.findMany({
-        where: { userId: { in: userIds }, stockId },
-      });
+      const allShares = await findSharesForUsersAndStock(userIds, stockId, tx);
       const shares = allShares.filter((s) => s.count > 0);
       if (shares.length === 0) {
         throw new AppError(t("noSharesUsers"));
@@ -154,17 +146,10 @@ export async function submitTransaction(
         );
       }
 
-      const group = await tx.transactionGroup.create({
-        data: {
-          stockId,
-          type,
-          count,
-          unitPrice,
-          commission,
-          totalCost,
-          dealDate,
-        },
-      });
+      const group = await createTransactionGroup(
+        { stockId, type, count, unitPrice, commission, totalCost, dealDate },
+        tx,
+      );
 
       const splitCounts = splitByWeight(
         shares,
@@ -182,24 +167,17 @@ export async function submitTransaction(
         const userCount = splitCounts[i].amount;
         const userRevenue = splitCosts[i].amount;
 
-        await tx.user.update({
-          where: { id: share.userId },
-          data: { cash: { increment: userRevenue } },
-        });
-
-        await tx.userShare.update({
-          where: { id: share.id },
-          data: { count: { decrement: userCount } },
-        });
-
-        await tx.transaction.create({
-          data: {
+        await adjustUserCash(share.userId, userRevenue, tx);
+        await adjustUserShareById(share.id, -userCount, tx);
+        await createParticipantTransaction(
+          {
             userId: share.userId,
             transactionGroupId: group.id,
             count: userCount,
             totalCost: userRevenue,
           },
-        });
+          tx,
+        );
       }
       return group;
     }
@@ -216,30 +194,25 @@ export async function submitCapitalIncrease(userId: number, amount: number) {
   if (amount <= 0) throw new AppError(t("amountMustBePositive"));
 
   return prisma.$transaction(async (tx) => {
-    const user = await tx.user.findUnique({ where: { id: userId } });
+    const user = await findUserById(userId, tx);
     if (!user) throw new AppError(t("userNotFound"));
 
-    const group = await tx.transactionGroup.create({
-      data: {
-        type: "capital-increased",
-        count: amount,
-        totalCost: amount,
-      },
-    });
+    const group = await createTransactionGroup(
+      { type: "capital-increased", count: amount, totalCost: amount },
+      tx,
+    );
 
-    await tx.user.update({
-      where: { id: userId },
-      data: { cash: { increment: amount } },
-    });
+    await adjustUserCash(userId, amount, tx);
 
-    await tx.transaction.create({
-      data: {
+    await createParticipantTransaction(
+      {
         userId,
         transactionGroupId: group.id,
         count: amount,
         totalCost: amount,
       },
-    });
+      tx,
+    );
 
     return group;
   });
@@ -254,31 +227,26 @@ export async function submitCashExit(userId: number, amount: number) {
   if (amount <= 0) throw new AppError(t("amountMustBePositive"));
 
   return prisma.$transaction(async (tx) => {
-    const user = await tx.user.findUnique({ where: { id: userId } });
+    const user = await findUserById(userId, tx);
     if (!user) throw new AppError(t("userNotFound"));
     if (user.cash < amount) throw new AppError(t("insufficientCashExit"));
 
-    const group = await tx.transactionGroup.create({
-      data: {
-        type: "cash-exited",
-        count: amount,
-        totalCost: amount,
-      },
-    });
+    const group = await createTransactionGroup(
+      { type: "cash-exited", count: amount, totalCost: amount },
+      tx,
+    );
 
-    await tx.user.update({
-      where: { id: userId },
-      data: { cash: { decrement: amount } },
-    });
+    await adjustUserCash(userId, -amount, tx);
 
-    await tx.transaction.create({
-      data: {
+    await createParticipantTransaction(
+      {
         userId,
         transactionGroupId: group.id,
         count: amount,
         totalCost: amount,
       },
-    });
+      tx,
+    );
 
     return group;
   });
@@ -297,9 +265,7 @@ export async function submitGroupCashExit(userIds: number[], amount: number) {
   if (amount <= 0) throw new AppError(t("amountMustBePositive"));
 
   return prisma.$transaction(async (tx) => {
-    const foundUsers = await tx.user.findMany({
-      where: { id: { in: userIds } },
-    });
+    const foundUsers = await findUsersByIds(userIds, tx);
     if (foundUsers.length !== userIds.length)
       throw new AppError(t("usersNotFound"));
 
@@ -315,13 +281,10 @@ export async function submitGroupCashExit(userIds: number[], amount: number) {
       );
     }
 
-    const group = await tx.transactionGroup.create({
-      data: {
-        type: "group-cash-exited",
-        count: amount,
-        totalCost: amount,
-      },
-    });
+    const group = await createTransactionGroup(
+      { type: "group-cash-exited", count: amount, totalCost: amount },
+      tx,
+    );
 
     const splitAmounts = splitByWeight(
       users,
@@ -333,19 +296,17 @@ export async function submitGroupCashExit(userIds: number[], amount: number) {
       const user = users[i];
       const userAmount = splitAmounts[i].amount;
 
-      await tx.user.update({
-        where: { id: user.id },
-        data: { cash: { decrement: userAmount } },
-      });
+      await adjustUserCash(user.id, -userAmount, tx);
 
-      await tx.transaction.create({
-        data: {
+      await createParticipantTransaction(
+        {
           userId: user.id,
           transactionGroupId: group.id,
           count: userAmount,
           totalCost: userAmount,
         },
-      });
+        tx,
+      );
     }
 
     return group;
@@ -365,72 +326,41 @@ export async function undoLastTransactionGroup() {
   const t = await getTranslations("Errors");
 
   return prisma.$transaction(async (tx) => {
-    const lastGroup = await tx.transactionGroup.findFirst({
-      orderBy: { createdAt: "desc" },
-      include: { transactions: true },
-    });
+    const lastGroup = await findMostRecentlyCreatedWithParticipants(tx);
     if (!lastGroup) throw new AppError(t("noTransactionsToUndo"));
 
     for (const participant of lastGroup.transactions) {
       if (lastGroup.type === "buy") {
-        await tx.user.update({
-          where: { id: participant.userId },
-          data: { cash: { increment: participant.totalCost } },
-        });
+        await adjustUserCash(participant.userId, participant.totalCost, tx);
         if (lastGroup.stockId != null) {
-          await tx.userShare.upsert({
-            where: {
-              userId_stockId: {
-                userId: participant.userId,
-                stockId: lastGroup.stockId,
-              },
-            },
-            update: { count: { decrement: participant.count } },
-            create: {
-              userId: participant.userId,
-              stockId: lastGroup.stockId,
-              count: -participant.count,
-            },
-          });
+          await adjustUserShareByStock(
+            participant.userId,
+            lastGroup.stockId,
+            -participant.count,
+            tx,
+          );
         }
       } else if (lastGroup.type === "sell") {
-        await tx.user.update({
-          where: { id: participant.userId },
-          data: { cash: { decrement: participant.totalCost } },
-        });
+        await adjustUserCash(participant.userId, -participant.totalCost, tx);
         if (lastGroup.stockId != null) {
-          await tx.userShare.upsert({
-            where: {
-              userId_stockId: {
-                userId: participant.userId,
-                stockId: lastGroup.stockId,
-              },
-            },
-            update: { count: { increment: participant.count } },
-            create: {
-              userId: participant.userId,
-              stockId: lastGroup.stockId,
-              count: participant.count,
-            },
-          });
+          await adjustUserShareByStock(
+            participant.userId,
+            lastGroup.stockId,
+            participant.count,
+            tx,
+          );
         }
       } else if (lastGroup.type === "capital-increased") {
-        await tx.user.update({
-          where: { id: participant.userId },
-          data: { cash: { decrement: participant.totalCost } },
-        });
+        await adjustUserCash(participant.userId, -participant.totalCost, tx);
       } else if (
         lastGroup.type === "cash-exited" ||
         lastGroup.type === "group-cash-exited"
       ) {
-        await tx.user.update({
-          where: { id: participant.userId },
-          data: { cash: { increment: participant.totalCost } },
-        });
+        await adjustUserCash(participant.userId, participant.totalCost, tx);
       }
     }
 
-    await tx.transactionGroup.delete({ where: { id: lastGroup.id } });
+    await deleteTransactionGroup(lastGroup.id, tx);
     return lastGroup;
   });
 }

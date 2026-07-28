@@ -23,7 +23,7 @@ light/dark theme.
 - UI: Tailwind v4 + `@base-ui/react` primitives (NOT Radix) wrapped in
   shadcn-style `src/components/ui/*` components (Select, Checkbox, Button,
   RadioGroup, Dialog, AlertDialog, Switch, Table, Badge, etc.) — data-slot
-  - `cn()` (clsx+tailwind-merge) conventions. Toasts via `sonner`.
+  + `cn()` (clsx+tailwind-merge) conventions. Toasts via `sonner`.
 - No test runner / no `package.json` visible in this environment. **Do
   not attempt to `bun install`, run the dev server, or run Prisma
   commands** — verify changes by reading the code carefully instead. This
@@ -48,7 +48,7 @@ light/dark theme.
 - `UserShare` — per (user, stock) running share balance (`count`).
   Unique on `[userId, stockId]`.
 - `TransactionGroup` — one **group event**: `type` (`"buy" | "sell" |
-"capital-increased" | "cash-exited" | "group-cash-exited"`), `count`
+  "capital-increased" | "cash-exited" | "group-cash-exited"`), `count`
   (total units traded), `unitPrice`, `commission` (percent, e.g. `0.25` =
   0.25%), `totalCost` (total money), `dealDate` (defaults to `now()`, but
   can be backdated via a date picker in the buy/sell forms — distinct from
@@ -64,15 +64,75 @@ light/dark theme.
 So: "Transaction History" conceptually means **TransactionGroups**, each
 of which fans out into one row per participating `Transaction`.
 
-## Core business logic — `src/lib/gold-accounting.ts`
+## Architecture: repository / service / action / UI layers
+
+The codebase is layered so that **only `src/server/repositories/*` and
+`src/server/services/gold-accounting.ts` ever import `prisma`** — no
+`page.tsx`, no `src/app/actions.ts`, no client component touches it.
+
+```
+src/server/repositories/*   -- pure Prisma data access, no business logic
+src/server/services/*       -- business logic + read-models, composed from repositories
+src/app/actions.ts          -- "use server" actions: call a service, revalidatePath, done
+src/app/[locale]/**/page.tsx -- server components: call a service, render
+```
+
+- **Repositories** (`src/server/repositories/{user,stock,user-share,
+  transaction-group,transaction}-repository.ts`) are thin, named,
+  single-purpose query/mutation functions — e.g.
+  `findAllUsersOrderedByCreation`, `adjustUserCash`,
+  `findSharesForUsersAndStock`. No translations, no derived/computed
+  fields, no `AppError`s — just Prisma calls with a name that says what
+  they're for. Every function takes the DB client as its **last**
+  parameter, defaulting to the `prisma` singleton:
+  `function foo(id: number, db: Db = prisma)`. `Db` (`src/server/
+  repositories/db.ts`) is `typeof prisma | Prisma.TransactionClient`,
+  which is what lets the exact same repository functions be reused both
+  standalone and inside `prisma.$transaction(async (tx) => ...)` by
+  passing `tx` through — see `gold-accounting.ts`.
+- **Services** (`src/server/services/*`) hold business logic and
+  read-models, composed from one or more repositories:
+  - `gold-accounting.ts` — the buy/sell/capital/exit/undo write logic
+    (see below). The **only** service allowed to import `prisma`
+    directly, because it needs to open the `$transaction` itself; every
+    repository call inside it passes that transaction's `tx` through.
+  - `user-service.ts`, `stock-service.ts` — CRUD + simple read-model
+    functions per domain (e.g. `getUsersForList`, `createUser`,
+    `deleteStock`). `user-service.createUser` orchestrates: create the
+    row, `submitCapitalIncrease` for initial capital, bulk-insert initial
+    `UserShare`s.
+  - `dashboard-service.ts`, `transactions-service.ts` — cross-domain
+    read-models for a specific page (`getDashboardData`,
+    `getTransactionGroupsOverview`), composing repositories directly
+    since there's no single owning domain service.
+  - `user-service.getUserDetail(userId)` returns the user-detail page's
+    whole view model in one call: portfolio, transaction history, Total
+    Received Capital, and the break-even price map (see below) — this is
+    where that computation lives now, not inline in the page.
+- **Actions** (`src/app/actions.ts`) stay thin: call a service function,
+  then `revalidatePath` every affected route, wrapped in
+  `withErrorHandling`. No Prisma, no business logic branching (e.g. the
+  "can't delete the gold stock" check now lives in
+  `stockService.deleteStock`, not in the action).
+- **Pages** (server components) call a service for data and render it —
+  no Prisma, no derived-figure computation (cost basis, totals, splits)
+  inline. Presentation-only shaping (e.g. building a translated
+  `typeLabel` map, or mapping a service's raw rows onto a specific table
+  component's prop shape) is still fine at the page level — that's a
+  view concern, not a data-access one.
+
+When adding a new query or mutation: add (or extend) a repository
+function first, then either extend an existing service or add a new one
+that calls it — never reach for `prisma` from an action or a page.
+
+## Core business logic — `src/server/services/gold-accounting.ts`
 
 `submitTransaction(userIds, stockId, count, type, unitPrice, commission, dealDate?)`:
-
 - Computes `realPrice = getRealPrice(unitPrice, commission, type)` (buy pays
   more, sell receives less — `src/lib/pricing.ts`), `totalCost = realPrice * count`.
 - **Buy**: only users with `cash > 0` participate; the group's `count`/`totalCost`
   are split across them **by weight = their cash / total eligible cash**
-  (`splitByWeight`, which gives the _last_ participant the remainder so the
+  (`splitByWeight`, which gives the *last* participant the remainder so the
   parts always sum exactly to the total despite float rounding).
 - **Sell**: only `UserShare` rows with `count > 0` for that stock
   participate; split by weight = their share count / total eligible shares.
@@ -106,8 +166,8 @@ commission.
 All server actions are wrapped in `withErrorHandling` (`src/lib/with-action-error-handling.ts`)
 which returns `{ success, data }` or `{ success: false, message }` —
 consumed client-side by the `useSubmitForm` hook, which shows a toast and
-resolves the result. Error messages inside `gold-accounting.ts` and
-`actions.ts` are pulled from the `Errors` translation namespace via
+resolves the result. Error messages inside `gold-accounting.ts` and other
+services are pulled from the `Errors` translation namespace via
 `getTranslations`, not hardcoded strings.
 
 ## Total Received Capital
@@ -115,14 +175,14 @@ resolves the result. Error messages inside `gold-accounting.ts` and
 `capitalIncreased − cashExited`, where `cashExited` includes **both**
 `"cash-exited"` (individual) and `"group-cash-exited"` (group) —
 otherwise a group exit wouldn't move the metric at all. Computed two ways:
-
 - **Per user** (`users/[id]/page.tsx`): filter that user's own
   `Transaction` rows by their `transactionGroup.type`, since a
-  `group-cash-exited` group's own `totalCost` is the _whole_ group's
+  `group-cash-exited` group's own `totalCost` is the *whole* group's
   withdrawal, not any one participant's share.
-- **System-wide** (dashboard): `prisma.transactionGroup.aggregate` summed
-  by `type`, since for the aggregate case the group's `totalCost` already
-  equals the total moved regardless of participant count.
+- **System-wide** (dashboard): `sumTotalCostByType` (`transaction-group-
+  repository.ts`, a thin wrapper around `prisma.transactionGroup.aggregate`)
+  summed by `type`, since for the aggregate case the group's `totalCost`
+  already equals the total moved regardless of participant count.
 
 Both places show the formula's two operands alongside the result (not
 just the final number), per how this was originally requested.
@@ -136,7 +196,6 @@ the remaining position would exactly recover its cost.
 `computeBreakEvenPrice(events: CostBasisEvent[])` replays a list of
 `{ type: "buy" | "sell", count, totalCost, dealDate }` events in
 chronological (`dealDate`) order:
-
 - **Buy**: blends into the running average —
   `avgCost = (avgCost * heldCount + event.totalCost) / (heldCount + event.count)`.
 - **Sell**: does **not** change `avgCost` — only `heldCount` decreases.
@@ -150,16 +209,16 @@ chronological (`dealDate`) order:
   break-even price is meaningless with no remaining shares.
 
 Computed in two places, both **derived on the fly, not persisted**:
-
-- **Per user** (`users/[id]/page.tsx`, Portfolio table): one call per
-  held stock, replaying that user's own `Transaction` rows (their
-  portion of each `TransactionGroup`) filtered to `type: "buy" | "sell"`
-  and matching `stockId`.
-- **System-wide** (dashboard, shares-by-user table): one call per stock,
-  replaying every `buy`/`sell` `TransactionGroup` for that stock directly
-  (a group's own `count`/`totalCost` already represent the whole group
-  regardless of participant count, so these don't need to be fanned out
-  per user first).
+- **Per user** (`user-service.getUserDetail`, feeding the Portfolio table
+  on `users/[id]/page.tsx`): one call per held stock, replaying that
+  user's own `Transaction` rows (their portion of each `TransactionGroup`)
+  filtered to `type: "buy" | "sell"` and matching `stockId`.
+- **System-wide** (`dashboard-service.getDashboardData`, feeding the
+  shares-by-user table): one call per stock, replaying every `buy`/`sell`
+  `TransactionGroup` for that stock directly (a group's own
+  `count`/`totalCost` already represent the whole group regardless of
+  participant count, so these don't need to be fanned out per user
+  first).
 
 Gold transactions need no special-casing here — `createGoldTransaction`
 already funnels through `submitTransaction` as an ordinary buy/sell on
@@ -179,8 +238,9 @@ rows to replay.
 
 ## Conventions worth preserving
 
-- Server components fetch data directly via `prisma` (see `src/lib/prisma.ts`);
-  client components (`"use client"`) call server actions from
+- Server components call a `src/server/services/*` function for data
+  (never `prisma` directly — see the Architecture section above); client
+  components (`"use client"`) call server actions from
   `src/app/actions.ts` through `useSubmitForm`.
 - `revalidatePath` is called for every path that displays affected data
   after a mutation.
@@ -275,7 +335,7 @@ sentinel there.
 (fixed to Gold on the gold form) at the top, then the Buy/Sell type
 selector itself as two full-width cards — each `RadioGroupItem` is
 embedded inside its own card (via `Label htmlFor` wrapping the card), so
-the card _is_ the radio option: the Buy card shows Total Cash, the Sell
+the card *is* the radio option: the Buy card shows Total Cash, the Sell
 card shows Total Shares/Gold for the currently selected stock. Below that,
 a responsive grid of "checkbox-card" participants (a `Label`+`Checkbox`
 pair styled as a bordered card) shows each user's cash (buy) or share
@@ -285,6 +345,12 @@ rather than reverting to a plain radio row or checkbox list. Both forms
 also carry an optional backdated `dealDate` via `ui/date-picker.tsx`.
 
 ## Dashboard (`app/[locale]/page.tsx`)
+
+All of this page's data — users, stocks, totals, the shares-by-stock
+pivot, break-even prices — comes from a single `dashboard-service.
+getDashboardData()` call (see Architecture section above); the page only
+does translation-dependent shaping (`portfolioSlices`, using `tPie`) and
+rendering.
 
 Top summary row is 3 cards: Total Users, Total Cash, **Total Received
 Capital** (formula shown underneath — see above). There is deliberately
@@ -298,8 +364,7 @@ The shares-by-user table (still under the `t("totalSharesByStock")`
 heading) is a pivot: columns are stocks that currently have any shares
 outstanding, rows are users. It replaced the old single-column
 Total-Shares-by-Stock table since it's a strict superset — its first two
-rows _are_ that old table's data plus more:
-
+rows *are* that old table's data plus more:
 - Row 1, `t("total")` — total shares per stock, highlighted
   (`bg-primary/5` + bold primary text) since it's the most-glanced-at row.
 - Row 2, `t("breakEvenPrice")` — the system-wide break-even price per
@@ -344,11 +409,13 @@ Note: The repository includes RTK (Rust Token Killer) token‑optimized command 
 
 - **src/app** – Next.js App Router pages, layouts, and route groups (locale‑prefixed).
 - **src/components** – Reusable UI components; UI primitives in `src/components/ui/`.
-- **src/lib** – Utility functions, Prisma client wrapper (`prisma.ts`), pricing logic (`pricing.ts`), gold accounting (`gold-accounting.ts`), error handling wrappers (`with-action-error-handling.ts`), and constants (`constants/index.ts`).
+- **src/server/repositories** – Pure Prisma data access, one file per model (`user-`, `stock-`, `user-share-`, `transaction-group-`, `transaction-repository.ts`), plus the shared `Db` client type (`db.ts`). No business logic.
+- **src/server/services** – Business logic + read-models composed from repositories: `gold-accounting.ts` (buy/sell/capital/exit/undo — the only service that opens `prisma.$transaction` directly), `user-service.ts`, `stock-service.ts`, `dashboard-service.ts`, `transactions-service.ts`. See the Architecture section above.
+- **src/lib** – Framework-agnostic utilities with no Prisma dependency: Prisma client wrapper (`prisma.ts`, imported only by repositories/`gold-accounting.ts`), pricing logic (`pricing.ts`), break-even/cost-basis math (`cost-basis.ts`), error handling wrappers (`with-action-error-handling.ts`, `errors.ts`), formatting (`utils.ts`), and constants (`constants/index.ts`).
 - **src/i18n** – Internationalization configuration (`routing.ts`, `navigation.ts`, `request.ts`).
 - **src/proxy.ts** – Middleware‑equivalent for locale detection and redirect.
-- **src/app/actions.ts** – Server actions wrapped with `withErrorHandling`.
-- **src/app/[locale]/** – Locale‑specific pages (dashboard, transactions, users, stocks, etc.).
+- **src/app/actions.ts** – Server actions wrapped with `withErrorHandling`; call services only, never Prisma directly.
+- **src/app/[locale]/** – Locale‑specific pages (dashboard, transactions, users, stocks, etc.); call services only, never Prisma directly.
 - **src/components/portfolio-pie-chart.tsx** – Dependency‑free inline SVG pie chart.
 - **src/components/settings-provider.tsx** – Context for theme and display scale, with cookie persistence.
 
@@ -376,7 +443,6 @@ Note: The repository includes RTK (Rust Token Killer) token‑optimized command 
 - Prettier is configured via `prettier.config.js` (implicit). Run `npx prettier --check .` to verify formatting and `npx prettier --write .` to fix.
 
 <!-- rtk-instructions v2 -->
-
 # RTK (Rust Token Killer) - Token-Optimized Commands
 
 ## Golden Rule
@@ -384,7 +450,6 @@ Note: The repository includes RTK (Rust Token Killer) token‑optimized command 
 **Always prefix commands with `rtk`**. If RTK has a dedicated filter, it uses it. If not, it passes through unchanged. This means RTK is always safe to use.
 
 **Important**: Even in command chains with `&&`, use `rtk`:
-
 ```bash
 # ❌ Wrong
 git add . && git commit -m "msg" && git push
@@ -396,7 +461,6 @@ rtk git add . && rtk git commit -m "msg" && rtk git push
 ## RTK Commands by Workflow
 
 ### Build & Compile (80-90% savings)
-
 ```bash
 rtk cargo build         # Cargo build output
 rtk cargo check         # Cargo check output
@@ -408,7 +472,6 @@ rtk next build          # Next.js build with route metrics (87%)
 ```
 
 ### Test (60-99% savings)
-
 ```bash
 rtk cargo test          # Cargo test failures only (90%)
 rtk go test             # Go test failures only (90%)
@@ -422,7 +485,6 @@ rtk test <cmd>          # Generic test wrapper - failures only
 ```
 
 ### Git (59-80% savings)
-
 ```bash
 rtk git status          # Compact status
 rtk git log             # Compact log (works with all git flags)
@@ -441,7 +503,6 @@ rtk git worktree        # Compact worktree
 Note: Git passthrough works for ALL subcommands, even those not explicitly listed.
 
 ### GitHub (26-87% savings)
-
 ```bash
 rtk gh pr view <num>    # Compact PR view (87%)
 rtk gh pr checks        # Compact PR checks (79%)
@@ -451,7 +512,6 @@ rtk gh api              # Compact API responses (26%)
 ```
 
 ### JavaScript/TypeScript Tooling (70-90% savings)
-
 ```bash
 rtk pnpm list           # Compact dependency tree (70%)
 rtk pnpm outdated       # Compact outdated packages (80%)
@@ -462,7 +522,6 @@ rtk prisma              # Prisma without ASCII art (88%)
 ```
 
 ### Files & Search (60-75% savings)
-
 ```bash
 rtk ls <path>           # Tree format, compact (65%)
 rtk read <file>         # Code reading with filtering (60%)
@@ -471,7 +530,6 @@ rtk find <pattern>      # Find grouped by directory (70%)
 ```
 
 ### Analysis & Debug (70-90% savings)
-
 ```bash
 rtk err <cmd>           # Filter errors only from any command
 rtk log <file>          # Deduplicated logs with counts
@@ -483,7 +541,6 @@ rtk diff                # Ultra-compact diffs
 ```
 
 ### Infrastructure (85% savings)
-
 ```bash
 rtk docker ps           # Compact container list
 rtk docker images       # Compact image list
@@ -493,14 +550,12 @@ rtk kubectl logs        # Deduplicated pod logs
 ```
 
 ### Network (65-70% savings)
-
 ```bash
 rtk curl <url>          # Compact HTTP responses (70%)
 rtk wget <url>          # Compact download output (65%)
 ```
 
 ### Meta Commands
-
 ```bash
 rtk gain                # View token savings statistics
 rtk gain --history      # View command history with savings
@@ -512,17 +567,16 @@ rtk init --global       # Add RTK to ~/.claude/CLAUDE.md
 
 ## Token Savings Overview
 
-| Category         | Commands                       | Typical Savings |
-| ---------------- | ------------------------------ | --------------- |
-| Tests            | vitest, playwright, cargo test | 90-99%          |
-| Build            | next, tsc, lint, prettier      | 70-87%          |
-| Git              | status, log, diff, add, commit | 59-80%          |
-| GitHub           | gh pr, gh run, gh issue        | 26-87%          |
-| Package Managers | pnpm, npm, npx                 | 70-90%          |
-| Files            | ls, read, grep, find           | 60-75%          |
-| Infrastructure   | docker, kubectl                | 85%             |
-| Network          | curl, wget                     | 65-70%          |
+| Category | Commands | Typical Savings |
+|----------|----------|-----------------|
+| Tests | vitest, playwright, cargo test | 90-99% |
+| Build | next, tsc, lint, prettier | 70-87% |
+| Git | status, log, diff, add, commit | 59-80% |
+| GitHub | gh pr, gh run, gh issue | 26-87% |
+| Package Managers | pnpm, npm, npx | 70-90% |
+| Files | ls, read, grep, find | 60-75% |
+| Infrastructure | docker, kubectl | 85% |
+| Network | curl, wget | 65-70% |
 
 Overall average: **60-90% token reduction** on common development operations.
-
-<!-- /rtk-instructions -->
+<!-- /rtk-instructions -->

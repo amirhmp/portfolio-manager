@@ -5,19 +5,13 @@ import TransactionGroupsTable, {
 import { Card } from "@/components/ui/card";
 import UndoLastTransactionButton from "@/components/undo-last-transaction-button";
 import { Link } from "@/i18n/navigation";
-import { prisma } from "@/lib/prisma";
+import { getTransactionGroupsOverview } from "@/server/services/transactions-service";
 import { getTranslations } from "next-intl/server";
 
 export default async function TransactionsPage() {
   const t = await getTranslations("Transactions");
   const tType = await getTranslations("TransactionGroupsTable");
-  const groups = await prisma.transactionGroup.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      stock: true,
-      transactions: { include: { user: true }, orderBy: { id: "asc" } },
-    },
-  });
+  const groups = await getTransactionGroupsOverview();
 
   const typeLabel: Record<string, string> = {
     buy: tType("typeBuy"),

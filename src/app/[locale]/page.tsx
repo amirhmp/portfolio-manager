@@ -12,100 +12,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from "@/i18n/navigation";
-import { computeBreakEvenPrice, type CostBasisEvent } from "@/lib/cost-basis";
-import { prisma } from "@/lib/prisma";
+import { getDashboardData } from "@/server/services/dashboard-service";
 import { getTranslations } from "next-intl/server";
 
 export default async function Dashboard() {
   const t = await getTranslations("Dashboard");
   const tPie = await getTranslations("PortfolioPieChart");
 
-  const [users, stocks, lastPriceGroups, tradeGroups, increasedAgg, exitedAgg] =
-    await Promise.all([
-      prisma.user.findMany({
-        include: {
-          shares: { include: { stock: true } },
-        },
-      }),
-      prisma.stock.findMany({
-        orderBy: { name: "asc" },
-        include: { shares: true },
-      }),
-      // Most recent priced trade per stock, used below as a stand-in "current
-      // price" -- there's no live market price field in the schema, so a
-      // stock's last traded unitPrice is the best available valuation basis.
-      prisma.transactionGroup.findMany({
-        where: { stockId: { not: null }, unitPrice: { not: null } },
-        orderBy: { dealDate: "desc" },
-        select: { stockId: true, unitPrice: true },
-      }),
-      // Every buy/sell group, used below to replay a system-wide weighted
-      // average cost basis (break-even price) per stock. A group's own
-      // count/totalCost already represent the whole group regardless of
-      // participant count, so these don't need to be fanned out per user.
-      prisma.transactionGroup.findMany({
-        where: { stockId: { not: null }, type: { in: ["buy", "sell"] } },
-        select: {
-          stockId: true,
-          type: true,
-          count: true,
-          totalCost: true,
-          dealDate: true,
-        },
-      }),
-      prisma.transactionGroup.aggregate({
-        where: { type: "capital-increased" },
-        _sum: { totalCost: true },
-      }),
-      // Both the single-user "cash-exited" and the multi-user
-      // "group-cash-exited" reduce received capital the same way.
-      prisma.transactionGroup.aggregate({
-        where: { type: { in: ["cash-exited", "group-cash-exited"] } },
-        _sum: { totalCost: true },
-      }),
-    ]);
-
-  const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
-
-  const totalCapitalIncreased = increasedAgg._sum.totalCost ?? 0;
-  const totalCashExited = exitedAgg._sum.totalCost ?? 0;
-  const totalReceivedCapital = totalCapitalIncreased - totalCashExited;
-
-  const lastPriceByStock = new Map<number, number>();
-  for (const g of lastPriceGroups) {
-    if (
-      g.stockId != null &&
-      g.unitPrice != null &&
-      !lastPriceByStock.has(g.stockId)
-    ) {
-      lastPriceByStock.set(g.stockId, g.unitPrice);
-    }
-  }
-
-  const sharesByStock = stocks
-    .map((stock) => ({
-      id: stock.id,
-      name: stock.name,
-      total: stock.shares.reduce((sum, s) => sum + s.count, 0),
-      lastPrice: lastPriceByStock.get(stock.id) ?? null,
-    }))
-    .filter((s) => s.total > 0);
-
-  // System-wide break-even price ("قیمت سر به سر") per stock: the
-  // weighted-average cost basis of everything the group as a whole still
-  // holds, replayed from every buy/sell TransactionGroup for that stock.
-  const breakEvenByStockId = new Map<number, number | null>();
-  for (const stock of stocks) {
-    const events: CostBasisEvent[] = tradeGroups
-      .filter((g) => g.stockId === stock.id)
-      .map((g) => ({
-        type: g.type as "buy" | "sell",
-        count: g.count,
-        totalCost: g.totalCost,
-        dealDate: g.dealDate,
-      }));
-    breakEvenByStockId.set(stock.id, computeBreakEvenPrice(events));
-  }
+  const {
+    users,
+    totalCash,
+    totalCapitalIncreased,
+    totalCashExited,
+    totalReceivedCapital,
+    sharesByStock,
+    breakEvenByStockId,
+  } = await getDashboardData();
 
   const portfolioSlices = [
     { name: tPie("cash"), value: totalCash },
@@ -204,6 +126,19 @@ export default async function Dashboard() {
           <TableBody>
             {sharesByStock.length > 0 && (
               <>
+                <TableRow className="bg-primary/5 hover:bg-primary/10">
+                  <TableCell className="font-semibold text-primary">
+                    {t("total")}
+                  </TableCell>
+                  {sharesByStock.map((stock) => (
+                    <TableCell
+                      key={stock.id}
+                      className="text-right font-mono font-semibold tabular-nums text-primary"
+                    >
+                      {stock.total.toLocaleString()}
+                    </TableCell>
+                  ))}
+                </TableRow>
                 <TableRow className="bg-muted/40">
                   <TableCell className="text-muted-foreground">
                     {t("breakEvenPrice")}
@@ -217,19 +152,6 @@ export default async function Dashboard() {
                         value={breakEvenByStockId.get(stock.id) ?? null}
                         placeholder="—"
                       />
-                    </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow className="bg-primary/5 hover:bg-primary/10">
-                  <TableCell className="font-semibold text-primary">
-                    {t("total")}
-                  </TableCell>
-                  {sharesByStock.map((stock) => (
-                    <TableCell
-                      key={stock.id}
-                      className="text-right font-mono font-semibold tabular-nums text-primary"
-                    >
-                      {stock.total.toLocaleString()}
                     </TableCell>
                   ))}
                 </TableRow>

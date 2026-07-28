@@ -1,7 +1,8 @@
 "use server";
 
 import { GOLD_STOCK_ID, MILLION, MITHQAL_TO_GRAMS_FACTOR } from "@/constants";
-import { AppError } from "@/lib/errors";
+import { limitDecimals } from "@/lib/utils";
+import { withErrorHandling } from "@/lib/with-action-error-handling";
 import {
   submitCapitalIncrease,
   submitCashExit,
@@ -9,11 +10,9 @@ import {
   submitTransaction,
   undoLastTransactionGroup,
   type TradeType,
-} from "@/lib/gold-accounting";
-import { prisma } from "@/lib/prisma";
-import { limitDecimals } from "@/lib/utils";
-import { withErrorHandling } from "@/lib/with-action-error-handling";
-import { getTranslations } from "next-intl/server";
+} from "@/server/services/gold-accounting";
+import * as stockService from "@/server/services/stock-service";
+import * as userService from "@/server/services/user-service";
 import { revalidatePath } from "next/cache";
 
 // ─── Users ────────────────────────────────────────────
@@ -24,31 +23,7 @@ export const createUser = withErrorHandling(
     initialCapital: number,
     initialShares: Record<number, number> = {},
   ) => {
-    const user = await prisma.user.create({
-      data: { name, cash: 0 },
-    });
-
-    // The "initial capital" entered on creation is just the user's first
-    // capital-increased transaction, not a separate stored field.
-    if (initialCapital > 0) {
-      await submitCapitalIncrease(user.id, initialCapital);
-    }
-
-    // Initial shares are a starting balance, not logged as a trade -- they
-    // are optional per-stock counts entered on the create-user form.
-    const shareEntries = Object.entries(initialShares).filter(
-      ([, count]) => count > 0,
-    );
-    if (shareEntries.length > 0) {
-      await prisma.userShare.createMany({
-        data: shareEntries.map(([stockId, count]) => ({
-          userId: user.id,
-          stockId: Number(stockId),
-          count,
-        })),
-      });
-    }
-
+    await userService.createUser(name, initialCapital, initialShares);
     revalidatePath("/users");
     revalidatePath("/");
   },
@@ -56,17 +31,14 @@ export const createUser = withErrorHandling(
 
 export const updateUser = withErrorHandling(
   async (id: number, name: string) => {
-    await prisma.user.update({
-      where: { id },
-      data: { name },
-    });
+    await userService.updateUser(id, name);
     revalidatePath("/users");
     revalidatePath("/");
   },
 );
 
 export const deleteUser = withErrorHandling(async (id: number) => {
-  await prisma.user.delete({ where: { id } });
+  await userService.deleteUser(id);
   revalidatePath("/users");
   revalidatePath("/");
 });
@@ -74,16 +46,12 @@ export const deleteUser = withErrorHandling(async (id: number) => {
 // ─── Stocks ───────────────────────────────────────────
 
 export const createStock = withErrorHandling(async (name: string) => {
-  await prisma.stock.create({ data: { name } });
+  await stockService.createStock(name);
   revalidatePath("/stocks");
 });
 
 export const deleteStock = withErrorHandling(async (id: number) => {
-  if (id === GOLD_STOCK_ID) {
-    const t = await getTranslations("Errors");
-    throw new AppError(t("cannotDeleteGold"));
-  }
-  await prisma.stock.delete({ where: { id } });
+  await stockService.deleteStock(id);
   revalidatePath("/stocks");
 });
 

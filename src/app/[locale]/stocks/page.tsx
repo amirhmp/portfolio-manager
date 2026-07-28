@@ -9,17 +9,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { GOLD_STOCK_ID } from "@/constants";
-import { prisma } from "@/lib/prisma";
+import { getStocksOverview } from "@/server/services/stock-service";
 import { getTranslations } from "next-intl/server";
 import CreateStockForm from "./_components/create-stock-form";
 import DeleteStockButton from "./_components/delete-stock-btn";
 
 export default async function StocksPage() {
   const t = await getTranslations("Stocks");
-  const stocks = await prisma.stock.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { _count: { select: { transactionGroups: true, shares: true } } },
-  });
+  const stocks = await getStocksOverview();
 
   return (
     <div>

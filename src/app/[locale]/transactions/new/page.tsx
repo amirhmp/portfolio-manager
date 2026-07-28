@@ -1,15 +1,15 @@
 import PageHeader from "@/components/page-header";
 import TransactionForm from "@/components/transaction-form";
-import { prisma } from "@/lib/prisma";
+import { getStocksForSelection } from "@/server/services/stock-service";
+import { getUsersForTransactionForm } from "@/server/services/user-service";
 import { getTranslations } from "next-intl/server";
 
 export default async function NewTransactionPage() {
   const t = await getTranslations("NewTransaction");
-  const users = await prisma.user.findMany({
-    orderBy: { name: "asc" },
-    include: { shares: true },
-  });
-  const stocks = await prisma.stock.findMany({ orderBy: { name: "asc" } });
+  const [users, stocks] = await Promise.all([
+    getUsersForTransactionForm(),
+    getStocksForSelection(),
+  ]);
 
   return (
     <div>

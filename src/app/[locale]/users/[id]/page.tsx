@@ -9,8 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import UserTransactionsTable from "@/components/user-transactions-table";
-import { computeBreakEvenPrice, type CostBasisEvent } from "@/lib/cost-basis";
-import { prisma } from "@/lib/prisma";
+import { getUserDetail } from "@/server/services/user-service";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import ExitUserCashForm from "./exit-user-cash-form";
@@ -25,54 +24,11 @@ export default async function UserDetailPage({
   const { id } = await params;
   const userId = parseInt(id);
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      shares: { include: { stock: true } },
-      transactions: {
-        include: { transactionGroup: { include: { stock: true } } },
-        orderBy: { transactionGroup: { createdAt: "desc" } },
-      },
-    },
-  });
+  const detail = await getUserDetail(userId);
+  if (!detail) return notFound();
 
-  if (!user) return notFound();
-
-  // Total received capital = everything this user has put in (capital
-  // increases) minus everything they've taken out (individual cash exits
-  // and their share of any group cash exits).
-  const capitalIncreased = user.transactions
-    .filter((tx) => tx.transactionGroup.type === "capital-increased")
-    .reduce((sum, tx) => sum + tx.totalCost, 0);
-  const cashExited = user.transactions
-    .filter(
-      (tx) =>
-        tx.transactionGroup.type === "cash-exited" ||
-        tx.transactionGroup.type === "group-cash-exited",
-    )
-    .reduce((sum, tx) => sum + tx.totalCost, 0);
-  const totalReceivedCapital = capitalIncreased - cashExited;
-
-  // Break-even price ("قیمت سر به سر") per stock: the weighted-average cost
-  // basis of this user's currently-held shares, replayed from their own
-  // buy/sell Transaction rows (their portion of each TransactionGroup).
-  const breakEvenByStockId = new Map<number, number | null>();
-  for (const share of user.shares) {
-    const events: CostBasisEvent[] = user.transactions
-      .filter(
-        (tx) =>
-          tx.transactionGroup.stockId === share.stockId &&
-          (tx.transactionGroup.type === "buy" ||
-            tx.transactionGroup.type === "sell"),
-      )
-      .map((tx) => ({
-        type: tx.transactionGroup.type as "buy" | "sell",
-        count: tx.count,
-        totalCost: tx.totalCost,
-        dealDate: tx.transactionGroup.dealDate,
-      }));
-    breakEvenByStockId.set(share.stockId, computeBreakEvenPrice(events));
-  }
+  const { user, capitalIncreased, cashExited, totalReceivedCapital, breakEvenByStockId } =
+    detail;
 
   return (
     <div>
