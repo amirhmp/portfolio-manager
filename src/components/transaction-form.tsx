@@ -129,7 +129,8 @@ export default function TransactionForm({
               <SelectTrigger className="w-45">
                 <SelectValue>
                   {(value: number) =>
-                    stocks.find((s) => s.id === value)?.name ?? t("selectAStock")
+                    stocks.find((s) => s.id === value)?.name ??
+                    t("selectAStock")
                   }
                 </SelectValue>
               </SelectTrigger>
@@ -166,7 +167,9 @@ export default function TransactionForm({
               >
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="buy" id="type-buy" />
-                  <span className="text-sm font-medium text-primary">{t("buy")}</span>
+                  <span className="text-sm font-medium text-primary">
+                    {t("buy")}
+                  </span>
                 </div>
                 <div>
                   <p className="font-mono text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
@@ -247,7 +250,11 @@ export default function TransactionForm({
                       </span>
                       <span className="font-mono text-xs tabular-nums text-muted-foreground">
                         {showShares ? t("shares") : t("cash")}:{" "}
-                        {showShares ? metric.toLocaleString() : <PriceLabel value={metric} />}
+                        {showShares ? (
+                          metric.toLocaleString()
+                        ) : (
+                          <PriceLabel value={metric} />
+                        )}
                       </span>
                     </div>
                   </Label>
@@ -310,7 +317,7 @@ export default function TransactionForm({
                 maxFractions={3}
                 min={0}
                 step="any"
-                placeholder="0"
+                placeholder="0.12"
                 className="font-mono tabular-nums"
               />
             </div>
@@ -328,7 +335,11 @@ export default function TransactionForm({
               <span>{useCurrentDate ? t("useCurrentDate") : t("date")}</span>
             </Label>
             {!useCurrentDate && (
-              <DatePicker locale={locale} defaultValue={new Date()} name="date" />
+              <DatePicker
+                locale={locale}
+                defaultValue={new Date()}
+                name="date"
+              />
             )}
           </div>
 
