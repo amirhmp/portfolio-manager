@@ -5,6 +5,7 @@ import { DISPLAY_SCALE_COOKIE_KEY, THEME_COOKIE_KEY } from "@/constants";
 import { routing } from "@/i18n/routing";
 import { parseDisplayScale, parseTheme } from "@/lib/settings-cookies";
 import { cn } from "@/lib/utils";
+import { DirectionProvider } from "@base-ui/react/direction-provider";
 import type { Metadata } from "next";
 import { hasLocale, type Locale, NextIntlClientProvider } from "next-intl";
 import {
@@ -131,18 +132,24 @@ export default async function RootLayout({
     >
       <body className="h-full flex overflow-hidden bg-background">
         <NextIntlClientProvider messages={messages}>
-          <SettingsProvider
-            initialTheme={theme}
-            initialDisplayScale={displayScale}
-          >
-            <Sidebar />
-            <main className="flex-1 h-full overflow-y-auto">
-              <div className="mx-auto max-w-6xl px-6 py-10 sm:px-10">
-                {children}
-              </div>
-            </main>
-            <Toaster />
-          </SettingsProvider>
+          {/* The `dir` attribute above only handles HTML/CSS mirroring --
+              interactive Base UI components (e.g. Slider) compute pointer
+              positions in code and need this provider too, or dragging
+              feels reversed in RTL locales. */}
+          <DirectionProvider direction={dir}>
+            <SettingsProvider
+              initialTheme={theme}
+              initialDisplayScale={displayScale}
+            >
+              <Sidebar />
+              <main className="flex-1 h-full overflow-y-auto">
+                <div className="mx-auto max-w-6xl px-6 py-10 sm:px-10">
+                  {children}
+                </div>
+              </main>
+              <Toaster />
+            </SettingsProvider>
+          </DirectionProvider>
         </NextIntlClientProvider>
       </body>
     </html>
