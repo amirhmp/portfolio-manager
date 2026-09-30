@@ -17,7 +17,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from "@/i18n/navigation";
+import type { PortfolioSnapshot } from "@/lib/portfolio-timeline";
 import { getRealPrice } from "@/lib/pricing";
+import PortfolioAfterDialog, {
+  PortfolioAfterButton,
+  type PortfolioAfterTarget,
+} from "./portfolio-after-dialog";
 import { PriceLabel } from "./price/PriceLabel";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -40,6 +45,8 @@ export type TransactionGroupRow = {
   dealDate: Date | string;
   stock: { name: string } | null;
   participants: TransactionGroupParticipant[];
+  /** Pooled portfolio (all users) right after this group was recorded. */
+  portfolioAfter: PortfolioSnapshot;
 };
 
 const typeBadgeVariant: Record<
@@ -61,6 +68,8 @@ export default function TransactionGroupsTable({
   const t = useTranslations("TransactionGroupsTable");
   const locale = useLocale();
   const [selected, setSelected] = useState<TransactionGroupRow | null>(null);
+  const [portfolioTarget, setPortfolioTarget] =
+    useState<PortfolioAfterTarget | null>(null);
   const isTrade = (type: string) => type === "buy" || type === "sell";
 
   const typeLabel: Record<string, string> = {
@@ -70,6 +79,16 @@ export default function TransactionGroupsTable({
     "cash-exited": t("typeCashExited"),
     "group-cash-exited": t("typeGroupCashExited"),
   };
+
+  function openPortfolio(group: TransactionGroupRow) {
+    const label = typeLabel[group.type] ?? group.type.toUpperCase();
+    setPortfolioTarget({
+      description: `${group.stock ? `${label} — ${group.stock.name}` : label} · ${new Date(group.dealDate).toLocaleString(locale)}`,
+      scope: "all",
+      snapshot: group.portfolioAfter,
+      highlightStockName: group.stock?.name ?? null,
+    });
+  }
 
   return (
     <>
@@ -85,6 +104,7 @@ export default function TransactionGroupsTable({
             <TableHead className="text-right">{t("commission")}</TableHead>
             <TableHead className="text-right">{t("realPrice")}</TableHead>
             <TableHead className="text-right">{t("totalCost")}</TableHead>
+            <TableHead className="text-right">{t("portfolio")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -134,13 +154,16 @@ export default function TransactionGroupsTable({
                 <TableCell className="text-right font-mono tabular-nums font-medium">
                   <PriceLabel value={group.totalCost} />
                 </TableCell>
+                <TableCell className="text-right">
+                  <PortfolioAfterButton onOpen={() => openPortfolio(group)} />
+                </TableCell>
               </TableRow>
             );
           })}
           {groups.length === 0 && (
             <TableRow>
               <TableCell
-                colSpan={9}
+                colSpan={10}
                 className="text-center py-10 text-muted-foreground"
               >
                 {t("noTransactionsYet")}
@@ -149,6 +172,11 @@ export default function TransactionGroupsTable({
           )}
         </TableBody>
       </Table>
+
+      <PortfolioAfterDialog
+        target={portfolioTarget}
+        onClose={() => setPortfolioTarget(null)}
+      />
 
       <Dialog
         open={selected != null}

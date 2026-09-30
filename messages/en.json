@@ -144,7 +144,8 @@
     "cost": "Cost",
     "percentOfCount": "% of Count",
     "percentOfCost": "% of Cost",
-    "typeGroupCashExited": "Group Cash Exit"
+    "typeGroupCashExited": "Group Cash Exit",
+    "portfolio": "Portfolio"
   },
   "UserTransactionsTable": {
     "filterByType": "Filter by type",
@@ -165,7 +166,8 @@
     "realPrice": "Real Price",
     "totalCost": "Total Cost",
     "noTransactionsYet": "No transactions yet.",
-    "noTransactionsMatch": "No transactions match the selected filters."
+    "noTransactionsMatch": "No transactions match the selected filters.",
+    "portfolio": "Portfolio"
   },
   "Users": {
     "eyebrow": "Participants",
@@ -260,5 +262,16 @@
     "presetThousands": "Thousands",
     "presetMillions": "Millions",
     "examplePreview": "Preview"
+  },
+  "PortfolioAfter": {
+    "button": "View portfolio after trade",
+    "title": "Portfolio after trade",
+    "scopeAll": "Combined portfolio of all users",
+    "scopeUser": "This user's portfolio",
+    "item": "Item",
+    "amount": "Amount",
+    "cash": "Cash",
+    "noSharesHeld": "No shares held.",
+    "note": "Balances shown are the state right after this entry was recorded (in order of entry, not by deal date)."
   }
 }

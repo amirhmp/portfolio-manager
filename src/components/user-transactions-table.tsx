@@ -11,7 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { PortfolioSnapshot } from "@/lib/portfolio-timeline";
 import { getRealPrice } from "@/lib/pricing";
+import PortfolioAfterDialog, {
+  PortfolioAfterButton,
+  type PortfolioAfterTarget,
+} from "./portfolio-after-dialog";
 import { PriceLabel } from "./price/PriceLabel";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -28,6 +33,8 @@ export type UserTransactionRow = {
     createdAt: Date | string;
     dealDate: Date | string;
   };
+  /** This user's own portfolio right after this transaction. */
+  portfolioAfter: PortfolioSnapshot;
 };
 
 const typeBadgeVariant: Record<
@@ -48,6 +55,8 @@ export default function UserTransactionsTable({
   const t = useTranslations("UserTransactionsTable");
   const locale = useLocale();
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [portfolioTarget, setPortfolioTarget] =
+    useState<PortfolioAfterTarget | null>(null);
 
   const TYPE_OPTIONS: { value: string; label: string }[] = [
     { value: "buy", label: t("typeBuy") },
@@ -69,6 +78,17 @@ export default function UserTransactionsTable({
       selectedTypes.includes(tx.transactionGroup.type),
     );
   }, [transactions, selectedTypes]);
+
+  function openPortfolio(tx: UserTransactionRow) {
+    const group = tx.transactionGroup;
+    const label = typeLabel[group.type] ?? group.type.toUpperCase();
+    setPortfolioTarget({
+      description: `${group.stock ? `${label} — ${group.stock.name}` : label} · ${new Date(group.createdAt).toLocaleString(locale)}`,
+      scope: "user",
+      snapshot: tx.portfolioAfter,
+      highlightStockName: group.stock?.name ?? null,
+    });
+  }
 
   function toggleType(value: string, checked: boolean) {
     setSelectedTypes((prev) =>
@@ -118,6 +138,7 @@ export default function UserTransactionsTable({
             <TableHead className="text-right">{t("unitPrice")}</TableHead>
             <TableHead className="text-right">{t("realPrice")}</TableHead>
             <TableHead className="text-right">{t("totalCost")}</TableHead>
+            <TableHead className="text-right">{t("portfolio")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -158,13 +179,16 @@ export default function UserTransactionsTable({
                 <TableCell className="text-right font-mono tabular-nums font-medium">
                   <PriceLabel value={tx.totalCost} />
                 </TableCell>
+                <TableCell className="text-right">
+                  <PortfolioAfterButton onOpen={() => openPortfolio(tx)} />
+                </TableCell>
               </TableRow>
             );
           })}
           {filtered.length === 0 && (
             <TableRow>
               <TableCell
-                colSpan={7}
+                colSpan={8}
                 className="text-center py-8 text-muted-foreground"
               >
                 {transactions.length === 0
@@ -175,6 +199,11 @@ export default function UserTransactionsTable({
           )}
         </TableBody>
       </Table>
+
+      <PortfolioAfterDialog
+        target={portfolioTarget}
+        onClose={() => setPortfolioTarget(null)}
+      />
     </div>
   );
 }

@@ -27,8 +27,14 @@ export default async function UserDetailPage({
   const detail = await userService.getUserDetail(userId);
   if (!detail) return notFound();
 
-  const { user, capitalIncreased, cashExited, totalReceivedCapital, breakEvenByStockId } =
-    detail;
+  const {
+    user,
+    capitalIncreased,
+    cashExited,
+    totalReceivedCapital,
+    breakEvenByStockId,
+    portfolioAfterByTransactionId,
+  } = detail;
 
   return (
     <div>
@@ -173,7 +179,12 @@ export default async function UserDetailPage({
       </h2>
       <Card>
         <div className="px-4">
-          <UserTransactionsTable transactions={user.transactions} />
+          <UserTransactionsTable
+            transactions={user.transactions.map((tx) => ({
+              ...tx,
+              portfolioAfter: portfolioAfterByTransactionId[tx.id],
+            }))}
+          />
         </div>
       </Card>
     </div>

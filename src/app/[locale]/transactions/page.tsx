@@ -38,6 +38,7 @@ export default async function TransactionsPage() {
       count: tx.count,
       totalCost: tx.totalCost,
     })),
+    portfolioAfter: group.portfolioAfter,
   }));
 
   const lastGroup = groups[0];

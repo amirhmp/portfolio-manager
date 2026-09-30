@@ -144,7 +144,8 @@
     "cost": "هزینه",
     "percentOfCount": "٪ از تعداد",
     "percentOfCost": "٪ از هزینه",
-    "typeGroupCashExited": "خروج گروهی نقدینگی"
+    "typeGroupCashExited": "خروج گروهی نقدینگی",
+    "portfolio": "پرتفو"
   },
   "UserTransactionsTable": {
     "filterByType": "فیلتر بر اساس نوع",
@@ -165,7 +166,8 @@
     "realPrice": "قیمت واقعی",
     "totalCost": "هزینه کل",
     "noTransactionsYet": "هنوز تراکنشی ثبت نشده است.",
-    "noTransactionsMatch": "هیچ تراکنشی با فیلترهای انتخاب‌شده مطابقت ندارد."
+    "noTransactionsMatch": "هیچ تراکنشی با فیلترهای انتخاب‌شده مطابقت ندارد.",
+    "portfolio": "پرتفو"
   },
   "Users": {
     "eyebrow": "شرکت‌کنندگان",
@@ -260,5 +262,16 @@
     "presetThousands": "هزار",
     "presetMillions": "میلیون",
     "examplePreview": "پیش‌نمایش"
+  },
+  "PortfolioAfter": {
+    "button": "مشاهده پرتفو بعد از معامله",
+    "title": "پرتفو بعد از معامله",
+    "scopeAll": "پرتفوی تجمیعی همه کاربران",
+    "scopeUser": "پرتفوی این کاربر",
+    "item": "مورد",
+    "amount": "مقدار",
+    "cash": "نقد",
+    "noSharesHeld": "سهمی نگهداری نمی‌شود.",
+    "note": "مقادیر نمایش‌داده‌شده وضعیت بلافاصله پس از ثبت این تراکنش است (به ترتیب ثبت، نه تاریخ معامله)."
   }
 }

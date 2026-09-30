@@ -1,4 +1,8 @@
 import { computeBreakEvenPrice, type CostBasisEvent } from "@/lib/cost-basis";
+import {
+  buildUserPortfolioTimeline,
+  indexSnapshotsById,
+} from "@/lib/portfolio-timeline";
 import { userRepository } from "@/server/repositories/user-repository";
 import { userShareRepository } from "@/server/repositories/user-share-repository";
 import { goldAccountingService } from "./gold-accounting";
@@ -61,6 +65,10 @@ export const userService = {
    * Total Received Capital and, per held stock, the break-even price
    * ("قیمت سر به سر": the weighted-average cost basis of what's still held,
    * replayed from this user's own buy/sell Transaction rows).
+   *
+   * `portfolioAfterByTransactionId` maps each of this user's `Transaction.id`s
+   * to the user's own portfolio (cash + shares) right after that transaction,
+   * for the "view portfolio after trade" dialog in their history table.
    */
   async getUserDetail(userId: number) {
     const user = await userRepository.findUserWithPortfolio(userId);
@@ -99,12 +107,17 @@ export const userService = {
       breakEvenByStockId.set(share.stockId, computeBreakEvenPrice(events));
     }
 
+    const portfolioAfterByTransactionId = indexSnapshotsById(
+      buildUserPortfolioTimeline(user, user.transactions),
+    );
+
     return {
       user,
       capitalIncreased,
       cashExited,
       totalReceivedCapital,
       breakEvenByStockId,
+      portfolioAfterByTransactionId,
     };
   },
 };
