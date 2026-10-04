@@ -43,7 +43,9 @@
     "noUsersYet": "No users yet.",
     "createOne": "Create one",
     "totalReceivedCapital": "Total Received Capital",
-    "groupCashExitTitle": "Group Cash Exit"
+    "groupCashExitTitle": "Group Cash Exit",
+    "portfolioTimeline": "Portfolio Over Time",
+    "portfolioTimelineHint": "See how the combined portfolio changed after each transaction, newest first."
   },
   "PortfolioPieChart": {
     "cash": "Cash",
@@ -203,7 +205,9 @@
     "transactionHistory": "Transaction History",
     "totalReceivedCapital": "Total Received Capital",
     "capitalIncreased": "Capital Increased",
-    "cashExited": "Cash Exited"
+    "cashExited": "Cash Exited",
+    "portfolioTimeline": "Portfolio Over Time",
+    "portfolioTimelineHint": "See how this user's portfolio changed after each of their transactions, newest first."
   },
   "IncreaseCapitalForm": {
     "amount": "Amount",
@@ -273,5 +277,32 @@
     "cash": "Cash",
     "noSharesHeld": "No shares held.",
     "note": "Balances shown are the state right after this entry was recorded (in order of entry, not by deal date)."
+  },
+  "PortfolioTimelineChart": {
+    "cash": "Cash",
+    "total": "Total value",
+    "typeBuy": "Buy",
+    "typeSell": "Sell",
+    "typeCapitalIncreased": "Capital increased",
+    "typeCashExited": "Cash out",
+    "cashMovement": "Cash in / out",
+    "noPrice": "no price",
+    "noData": "No transactions to chart yet.",
+    "compositionTitle": "Composition after each entry",
+    "scopeAll": "Combined portfolio of all users. Each column is one recorded entry, in order of entry (not spaced by real time).",
+    "scopeUser": "This user's portfolio. Each column is one of their recorded entries, in order of entry (not spaced by real time).",
+    "valuationNote": "Stocks are valued at the last traded price known at that point (by anyone, before commission). Hover a column for exact counts, prices and values.",
+    "noPriceNote": "Stocks with no recorded trade yet at some point have no known price, so they're valued at 0 there.",
+    "loadOlder": "Load older entries",
+    "loadingOlder": "Loading…"
+  },
+  "PortfolioTimelineDialog": {
+    "button": "View portfolio chart",
+    "title": "Portfolio over time",
+    "descriptionAll": "Combined portfolio of all users after each transaction. Scroll left to load older ones.",
+    "descriptionUser": "This user's portfolio after each of their transactions. Scroll left to load older ones.",
+    "loading": "Loading chart…",
+    "loadFailed": "Couldn't load the chart.",
+    "retry": "Try again"
   }
 }

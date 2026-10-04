@@ -69,6 +69,9 @@ export const userService = {
    * `portfolioAfterByTransactionId` maps each of this user's `Transaction.id`s
    * to the user's own portfolio (cash + shares) right after that transaction,
    * for the "view portfolio after trade" dialog in their history table.
+   *
+   * (The portfolio-over-time chart is NOT loaded here: it's fetched page by
+   * page when its dialog opens -- see `portfolioChartService`.)
    */
   async getUserDetail(userId: number) {
     const user = await userRepository.findUserWithPortfolio(userId);

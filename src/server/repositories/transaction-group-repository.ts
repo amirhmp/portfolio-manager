@@ -45,6 +45,21 @@ export const transactionGroupRepository = {
     });
   },
 
+  /** Every priced buy/sell, oldest entry first (createdAt, then id -- the
+   * ledger order used by `lib/portfolio-timeline.ts`). Source of the "last
+   * traded price as of each point" valuation in the portfolio chart. */
+  findAllPricedTrades(db: Db = prisma) {
+    return db.transactionGroup.findMany({
+      where: {
+        stockId: { not: null },
+        unitPrice: { not: null },
+        type: { in: ["buy", "sell"] },
+      },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: { id: true, createdAt: true, stockId: true, unitPrice: true },
+    });
+  },
+
   /** Every buy/sell group across all stocks, used to replay a system-wide
    * break-even price per stock (see `cost-basis.ts`). A group's own
    * count/totalCost already represent the whole group regardless of

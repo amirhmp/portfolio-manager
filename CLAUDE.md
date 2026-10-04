@@ -31,7 +31,10 @@ light/dark theme.
   libs, etc.) without confirming it's actually installed — prefer a
   dependency-free implementation (see `portfolio-pie-chart.tsx`, and the
   hand-rolled theme toggle instead of `next-themes`) unless the user
-  confirms the package is present.
+  confirms the package is present. (Exception, confirmed by the user:
+  **`recharts`** (+ `react-is`) is the project's charting library for the
+  portfolio-over-time chart; use it for any future chart that the
+  hand-rolled SVG pie isn't suited for.)
 - **`messages/en.json` / `messages/fa.json` are not visible in what gets
   uploaded to this environment** (only `src/` is included). Any new
   `t("key")` added to the code needs a matching key in both files, but
@@ -225,6 +228,62 @@ already funnels through `submitTransaction` as an ordinary buy/sell on
 `GOLD_STOCK_ID`, so they're just more `TransactionGroup`/`Transaction`
 rows to replay.
 
+## Portfolio timeline, "portfolio after trade" & portfolio-over-time chart
+
+All built on one pure module, `src/lib/portfolio-timeline.ts` (no Prisma/React):
+it replays **backwards from the current `User.cash` / `UserShare.count`**
+(the source of truth), undoing each ledger event's effect, to get the
+portfolio right AFTER every event. Backwards (not forwards from zero)
+because starting shares entered on the create-user form are not logged as
+transactions, so a forward replay would miss them. Events are ordered by
+**entry order** (`createdAt`, then `id`) -- same as the Transactions page and
+undo -- NOT by `dealDate` (a backdated buy would otherwise show negative
+cash, since its split used the cash the user had at entry time).
+`deltaOfTransaction` must stay in sync with `gold-accounting.ts` (what a
+transaction does to cash/shares, and what undo reverses).
+
+- `buildGroupPortfolioTimeline(groups, allUsers)` -- POOLED portfolio (all
+  users summed) after each TransactionGroup. `buildUserPortfolioTimeline(user,
+  user.transactions)` -- one user's portfolio after each of their own
+  Transactions. Each point also carries `event` meta (type, stock, count,
+  price, dates) for markers/tooltips.
+- **"View portfolio after trade" button** (`components/portfolio-after-dialog.tsx`)
+  in both history tables: `transactionsService.getTransactionGroupsOverview`
+  adds `portfolioAfter` to every group row; `userService.getUserDetail`
+  returns `portfolioAfterByTransactionId`. ONE dialog per table, driven by a
+  `target` state -- never one per row: React events bubble through portals,
+  so a dialog inside a clickable `<TableRow>` would fire the row's onClick.
+- **Portfolio-over-time chart** (`components/portfolio-timeline-chart.tsx`,
+  recharts): one
+  column per entry (entry order, not a real time axis), stacked step-area of
+  cash + per-stock value, a total line with markers (▲ buy, ▼ sell, ◆ cash
+  in/out), a 100% composition bar under each entry, tooltip with exact
+  numbers. Valuation is `lib/portfolio-valuation.ts`: each point is valued at
+  the **last traded `unitPrice` known at that point, from ANY user's trades**
+  (repository `findAllPricedTrades`); a stock with no trade yet is valued at
+  0 and flagged (`price: null`, same stance as the pie chart).
+- **It is NOT rendered or computed with the page.** The dashboard (pooled)
+  and `/users/[id]` (that user) only show a card with a button
+  (`components/portfolio-timeline-dialog.tsx`); the chart lives in a dialog
+  that mounts -- and fetches -- only while open, fresh on every open. Data
+  is **lazy-loaded**: the `getPortfolioChartPage(userId | null, before,
+  limit)` action (`app/actions.ts`, a read exposed as an action only for
+  this) -> `portfolioChartService.get{Global,User}PortfolioChartPage`. First
+  page = newest `PORTFOLIO_CHART_PAGE_SIZE` (`constants/index.ts`, 10)
+  entries; scrolling back to the chart's left edge (or its "load older"
+  button) fetches the next older page and prepends it, keeping the scroll
+  position steady. The cursor `before` is the id of the oldest loaded point
+  (group id pooled / Transaction id per user), not an offset, so new entries
+  can't shift pages (`sliceChartPage` in `lib/portfolio-valuation.ts`).
+  `PortfolioChartPoint.sequence` is the 1-based position in the FULL
+  timeline (the tooltip's "#n"), stable across pages. Each page call still
+  rebuilds the full timeline server-side and slices it (backward replay needs
+  the newer entries anyway); bound the queries only if history gets huge.
+- The chart is forced `dir="ltr"` (recharts is LTR-only) even on RTL pages;
+  the tooltip re-applies the page direction. The invisible `<Bar>` in the
+  top chart is deliberate: it puts the category axis in band mode so the top
+  chart's columns line up with the composition bars below it.
+
 ## Money/number formatting
 
 - `normalizePrice` / `parsePrice` (`src/lib/utils.ts`) handle comma
@@ -417,6 +476,7 @@ Note: The repository includes RTK (Rust Token Killer) token‑optimized command 
 - **src/app/actions.ts** – Server actions wrapped with `withErrorHandling`; call services only, never Prisma directly.
 - **src/app/[locale]/** – Locale‑specific pages (dashboard, transactions, users, stocks, etc.); call services only, never Prisma directly.
 - **src/components/portfolio-pie-chart.tsx** – Dependency‑free inline SVG pie chart.
+- **src/components/portfolio-timeline-chart.tsx** – recharts portfolio-over-time chart (see "Portfolio timeline" section).
 - **src/components/settings-provider.tsx** – Context for theme and display scale, with cookie persistence.
 
 ## Database Workflow

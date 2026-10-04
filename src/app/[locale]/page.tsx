@@ -1,6 +1,7 @@
 import GroupCashExitForm from "@/components/group-cash-exit-form";
 import PageHeader from "@/components/page-header";
 import PortfolioPieChart from "@/components/portfolio-pie-chart";
+import PortfolioTimelineDialog from "@/components/portfolio-timeline-dialog";
 import { PriceLabel } from "@/components/price/PriceLabel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -95,6 +96,18 @@ export default async function Dashboard() {
               {t("noPriceNote")}
             </p>
           )}
+        </CardContent>
+      </Card>
+
+      <h2 className="mb-3 font-serif text-lg font-medium text-foreground">
+        {t("portfolioTimeline")}
+      </h2>
+      <Card className="mb-8">
+        <CardContent className="flex flex-col items-start justify-between gap-3 pt-6 sm:flex-row sm:items-center">
+          <p className="text-sm text-muted-foreground">
+            {t("portfolioTimelineHint")}
+          </p>
+          <PortfolioTimelineDialog />
         </CardContent>
       </Card>
 

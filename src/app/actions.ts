@@ -4,6 +4,7 @@ import { GOLD_STOCK_ID, MILLION, MITHQAL_TO_GRAMS_FACTOR } from "@/constants";
 import { limitDecimals } from "@/lib/utils";
 import { withErrorHandling } from "@/lib/with-action-error-handling";
 import { goldAccountingService, type TradeType } from "@/server/services/gold-accounting";
+import { portfolioChartService } from "@/server/services/portfolio-chart-service";
 import { stockService } from "@/server/services/stock-service";
 import { userService } from "@/server/services/user-service";
 import { revalidatePath } from "next/cache";
@@ -145,3 +146,18 @@ export const undoLastTransaction = withErrorHandling(async () => {
   revalidatePath("/users");
   revalidatePath("/");
 });
+
+// ─── Portfolio chart (read-only; lazy-loaded by the chart dialog) ─────
+
+/**
+ * One page of the portfolio-over-time chart. `userId` null = pooled
+ * portfolio of everyone; `before` = id of the oldest point already loaded
+ * (null = newest page). A read, exposed as an action only because the chart
+ * dialog fetches it on demand from the client.
+ */
+export const getPortfolioChartPage = withErrorHandling(
+  async (userId: number | null, before: number | null, limit: number) =>
+    userId == null
+      ? portfolioChartService.getGlobalPortfolioChartPage(before, limit)
+      : portfolioChartService.getUserPortfolioChartPage(userId, before, limit),
+);

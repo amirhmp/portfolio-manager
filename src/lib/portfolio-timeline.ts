@@ -37,11 +37,28 @@ export interface PortfolioSnapshot {
   holdings: PortfolioHolding[];
 }
 
+/** What happened at a timeline point (for markers/tooltips in the chart). */
+export interface TimelineEventMeta {
+  /** The TransactionGroup this event belongs to (also the price-lookup key). */
+  groupId: number;
+  type: string;
+  stockId: number | null;
+  stockName: string | null;
+  /** The event's own count/amount: the whole group's on the pooled timeline, this user's portion on a user timeline. */
+  count: number;
+  totalCost: number;
+  unitPrice: number | null;
+  commission: number | null;
+  dealDate: Date | string;
+  createdAt: Date | string;
+}
+
 /** One point on the timeline: the state right AFTER the event with this id. */
 export interface PortfolioTimelinePoint {
   /** TransactionGroup id (group timeline) or Transaction id (user timeline). */
   id: number;
   after: PortfolioSnapshot;
+  event: TimelineEventMeta;
 }
 
 /** Effect of one participant's transaction on their cash and share balance. */
@@ -109,7 +126,7 @@ function toSnapshot(
  */
 function replayBackwards(
   current: { cash: number; shares: Map<number, number> },
-  events: Array<{ id: number; deltas: LedgerDelta[] }>,
+  events: Array<{ id: number; deltas: LedgerDelta[]; event: TimelineEventMeta }>,
   names: Map<number, string>,
 ): PortfolioTimelinePoint[] {
   let cash = current.cash;
@@ -117,7 +134,11 @@ function replayBackwards(
   const points: PortfolioTimelinePoint[] = new Array(events.length);
 
   for (let i = events.length - 1; i >= 0; i--) {
-    points[i] = { id: events[i].id, after: toSnapshot(cash, shares, names) };
+    points[i] = {
+      id: events[i].id,
+      after: toSnapshot(cash, shares, names),
+      event: events[i].event,
+    };
 
     // Step back over this event so the next iteration sees the state before it.
     for (const delta of events[i].deltas) {
@@ -137,6 +158,11 @@ export interface TimelineGroup {
   type: string;
   stockId: number | null;
   stock: { name: string } | null;
+  count: number;
+  totalCost: number;
+  unitPrice: number | null;
+  commission: number | null;
+  dealDate: Date | string;
   transactions: Array<{ count: number; totalCost: number }>;
 }
 
@@ -155,6 +181,9 @@ export interface TimelineUserTransaction {
     type: string;
     stockId: number | null;
     stock: { name: string } | null;
+    unitPrice: number | null;
+    commission: number | null;
+    dealDate: Date | string;
   };
 }
 
@@ -196,6 +225,18 @@ export function buildGroupPortfolioTimeline(
           totalCost: tx.totalCost,
         }),
       ),
+      event: {
+        groupId: group.id,
+        type: group.type,
+        stockId: group.stockId,
+        stockName: group.stock?.name ?? null,
+        count: group.count,
+        totalCost: group.totalCost,
+        unitPrice: group.unitPrice,
+        commission: group.commission,
+        dealDate: group.dealDate,
+        createdAt: group.createdAt,
+      },
     }));
 
   return replayBackwards({ cash, shares }, events, names);
@@ -241,6 +282,18 @@ export function buildUserPortfolioTimeline(
           totalCost: tx.totalCost,
         }),
       ],
+      event: {
+        groupId: tx.transactionGroup.id,
+        type: tx.transactionGroup.type,
+        stockId: tx.transactionGroup.stockId,
+        stockName: tx.transactionGroup.stock?.name ?? null,
+        count: tx.count,
+        totalCost: tx.totalCost,
+        unitPrice: tx.transactionGroup.unitPrice,
+        commission: tx.transactionGroup.commission,
+        dealDate: tx.transactionGroup.dealDate,
+        createdAt: tx.transactionGroup.createdAt,
+      },
     }));
 
   return replayBackwards({ cash: user.cash, shares }, events, names);
