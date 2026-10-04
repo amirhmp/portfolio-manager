@@ -88,8 +88,16 @@ export const goldAccountingService = {
           tx,
         );
 
-        const splitCounts = splitByWeight(users, (u) => u.cash / totalCash, count);
-        const splitCosts = splitByWeight(users, (u) => u.cash / totalCash, totalCost);
+        const splitCounts = splitByWeight(
+          users,
+          (u) => u.cash / totalCash,
+          count,
+        );
+        const splitCosts = splitByWeight(
+          users,
+          (u) => u.cash / totalCash,
+          totalCost,
+        );
 
         for (let i = 0; i < users.length; i++) {
           const user = users[i];
@@ -97,7 +105,12 @@ export const goldAccountingService = {
           const userCost = splitCosts[i].amount;
 
           await userRepository.adjustUserCash(user.id, -userCost, tx);
-          await userShareRepository.adjustUserShareByStock(user.id, stockId, userCount, tx);
+          await userShareRepository.adjustUserShareByStock(
+            user.id,
+            stockId,
+            userCount,
+            tx,
+          );
           await transactionRepository.createParticipantTransaction(
             {
               userId: user.id,
@@ -125,7 +138,7 @@ export const goldAccountingService = {
         }
 
         const totalShares = shares.reduce((sum, s) => sum + s.count, 0);
-        if (totalShares <= count) {
+        if (totalShares < count) {
           throw new AppError(
             t("insufficientShares", { amount: normalizePrice(totalShares, 3) }),
           );
@@ -136,8 +149,16 @@ export const goldAccountingService = {
           tx,
         );
 
-        const splitCounts = splitByWeight(shares, (s) => s.count / totalShares, count);
-        const splitCosts = splitByWeight(shares, (s) => s.count / totalShares, totalCost);
+        const splitCounts = splitByWeight(
+          shares,
+          (s) => s.count / totalShares,
+          count,
+        );
+        const splitCosts = splitByWeight(
+          shares,
+          (s) => s.count / totalShares,
+          totalCost,
+        );
 
         for (let i = 0; i < shares.length; i++) {
           const share = shares[i];
@@ -145,7 +166,11 @@ export const goldAccountingService = {
           const userRevenue = splitCosts[i].amount;
 
           await userRepository.adjustUserCash(share.userId, userRevenue, tx);
-          await userShareRepository.adjustUserShareById(share.id, -userCount, tx);
+          await userShareRepository.adjustUserShareById(
+            share.id,
+            -userCount,
+            tx,
+          );
           await transactionRepository.createParticipantTransaction(
             {
               userId: share.userId,
@@ -182,7 +207,12 @@ export const goldAccountingService = {
       await userRepository.adjustUserCash(userId, amount, tx);
 
       await transactionRepository.createParticipantTransaction(
-        { userId, transactionGroupId: group.id, count: amount, totalCost: amount },
+        {
+          userId,
+          transactionGroupId: group.id,
+          count: amount,
+          totalCost: amount,
+        },
         tx,
       );
 
@@ -211,7 +241,12 @@ export const goldAccountingService = {
       await userRepository.adjustUserCash(userId, -amount, tx);
 
       await transactionRepository.createParticipantTransaction(
-        { userId, transactionGroupId: group.id, count: amount, totalCost: amount },
+        {
+          userId,
+          transactionGroupId: group.id,
+          count: amount,
+          totalCost: amount,
+        },
         tx,
       );
 
@@ -243,7 +278,9 @@ export const goldAccountingService = {
 
       const totalCash = users.reduce((sum, u) => sum + u.cash, 0);
       if (totalCash < amount) {
-        throw new AppError(t("insufficientCash", { amount: normalizePrice(totalCash) }));
+        throw new AppError(
+          t("insufficientCash", { amount: normalizePrice(totalCash) }),
+        );
       }
 
       const group = await transactionGroupRepository.createTransactionGroup(
@@ -251,7 +288,11 @@ export const goldAccountingService = {
         tx,
       );
 
-      const splitAmounts = splitByWeight(users, (u) => u.cash / totalCash, amount);
+      const splitAmounts = splitByWeight(
+        users,
+        (u) => u.cash / totalCash,
+        amount,
+      );
 
       for (let i = 0; i < users.length; i++) {
         const user = users[i];
@@ -288,12 +329,18 @@ export const goldAccountingService = {
 
     return prisma.$transaction(async (tx) => {
       const lastGroup =
-        await transactionGroupRepository.findMostRecentlyCreatedWithParticipants(tx);
+        await transactionGroupRepository.findMostRecentlyCreatedWithParticipants(
+          tx,
+        );
       if (!lastGroup) throw new AppError(t("noTransactionsToUndo"));
 
       for (const participant of lastGroup.transactions) {
         if (lastGroup.type === "buy") {
-          await userRepository.adjustUserCash(participant.userId, participant.totalCost, tx);
+          await userRepository.adjustUserCash(
+            participant.userId,
+            participant.totalCost,
+            tx,
+          );
           if (lastGroup.stockId != null) {
             await userShareRepository.adjustUserShareByStock(
               participant.userId,
@@ -303,7 +350,11 @@ export const goldAccountingService = {
             );
           }
         } else if (lastGroup.type === "sell") {
-          await userRepository.adjustUserCash(participant.userId, -participant.totalCost, tx);
+          await userRepository.adjustUserCash(
+            participant.userId,
+            -participant.totalCost,
+            tx,
+          );
           if (lastGroup.stockId != null) {
             await userShareRepository.adjustUserShareByStock(
               participant.userId,
@@ -313,12 +364,20 @@ export const goldAccountingService = {
             );
           }
         } else if (lastGroup.type === "capital-increased") {
-          await userRepository.adjustUserCash(participant.userId, -participant.totalCost, tx);
+          await userRepository.adjustUserCash(
+            participant.userId,
+            -participant.totalCost,
+            tx,
+          );
         } else if (
           lastGroup.type === "cash-exited" ||
           lastGroup.type === "group-cash-exited"
         ) {
-          await userRepository.adjustUserCash(participant.userId, participant.totalCost, tx);
+          await userRepository.adjustUserCash(
+            participant.userId,
+            participant.totalCost,
+            tx,
+          );
         }
       }
 
